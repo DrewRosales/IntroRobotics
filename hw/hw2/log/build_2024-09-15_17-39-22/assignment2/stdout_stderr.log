@@ -1,0 +1,22 @@
+/usr/lib/python3/dist-packages/setuptools/dist.py:723: UserWarning: Usage of dash-separated 'script-dir' will not be supported in future versions. Please use the underscore name 'script_dir' instead
+  warnings.warn(
+running egg_info
+writing ../build/assignment2/assignment2.egg-info/PKG-INFO
+writing dependency_links to ../build/assignment2/assignment2.egg-info/dependency_links.txt
+writing entry points to ../build/assignment2/assignment2.egg-info/entry_points.txt
+writing requirements to ../build/assignment2/assignment2.egg-info/requires.txt
+writing top-level names to ../build/assignment2/assignment2.egg-info/top_level.txt
+reading manifest file '../build/assignment2/assignment2.egg-info/SOURCES.txt'
+writing manifest file '../build/assignment2/assignment2.egg-info/SOURCES.txt'
+running build
+running build_py
+running install
+running install_lib
+running install_data
+running install_egg_info
+removing '/home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/lib/python3.10/site-packages/assignment2-0.0.0-py3.10.egg-info' (and everything under it)
+Copying ../build/assignment2/assignment2.egg-info to /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/lib/python3.10/site-packages/assignment2-0.0.0-py3.10.egg-info
+running install_scripts
+Installing coordinates script to /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/lib/assignment2
+Installing dummy_object_detector script to /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/lib/assignment2
+writing list of installed files to '/home/drew/repos/IntroRobotics/hw/hw2/build/assignment2/install.log'

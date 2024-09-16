@@ -1,0 +1,4 @@
+[console_scripts]
+coordinates = assignment2.coordinates:main
+dummy_object_detector = assignment2.dummy_object_detector:main
+

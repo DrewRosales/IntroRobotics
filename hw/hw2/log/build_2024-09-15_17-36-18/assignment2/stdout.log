@@ -1,0 +1,46 @@
+running egg_info
+creating ../build/assignment2/assignment2.egg-info
+writing ../build/assignment2/assignment2.egg-info/PKG-INFO
+writing dependency_links to ../build/assignment2/assignment2.egg-info/dependency_links.txt
+writing entry points to ../build/assignment2/assignment2.egg-info/entry_points.txt
+writing requirements to ../build/assignment2/assignment2.egg-info/requires.txt
+writing top-level names to ../build/assignment2/assignment2.egg-info/top_level.txt
+writing manifest file '../build/assignment2/assignment2.egg-info/SOURCES.txt'
+reading manifest file '../build/assignment2/assignment2.egg-info/SOURCES.txt'
+writing manifest file '../build/assignment2/assignment2.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/drew/repos/IntroRobotics/hw/hw2/build/assignment2/build
+creating /home/drew/repos/IntroRobotics/hw/hw2/build/assignment2/build/lib
+creating /home/drew/repos/IntroRobotics/hw/hw2/build/assignment2/build/lib/assignment2
+copying assignment2/dummy_object_detector.py -> /home/drew/repos/IntroRobotics/hw/hw2/build/assignment2/build/lib/assignment2
+copying assignment2/coordinates.py -> /home/drew/repos/IntroRobotics/hw/hw2/build/assignment2/build/lib/assignment2
+copying assignment2/__init__.py -> /home/drew/repos/IntroRobotics/hw/hw2/build/assignment2/build/lib/assignment2
+copying assignment2/assignment2.py -> /home/drew/repos/IntroRobotics/hw/hw2/build/assignment2/build/lib/assignment2
+running install
+running install_lib
+creating /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/lib/python3.10/site-packages/assignment2
+copying /home/drew/repos/IntroRobotics/hw/hw2/build/assignment2/build/lib/assignment2/dummy_object_detector.py -> /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/lib/python3.10/site-packages/assignment2
+copying /home/drew/repos/IntroRobotics/hw/hw2/build/assignment2/build/lib/assignment2/coordinates.py -> /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/lib/python3.10/site-packages/assignment2
+copying /home/drew/repos/IntroRobotics/hw/hw2/build/assignment2/build/lib/assignment2/__init__.py -> /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/lib/python3.10/site-packages/assignment2
+copying /home/drew/repos/IntroRobotics/hw/hw2/build/assignment2/build/lib/assignment2/assignment2.py -> /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/lib/python3.10/site-packages/assignment2
+byte-compiling /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/lib/python3.10/site-packages/assignment2/dummy_object_detector.py to dummy_object_detector.cpython-310.pyc
+byte-compiling /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/lib/python3.10/site-packages/assignment2/coordinates.py to coordinates.cpython-310.pyc
+byte-compiling /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/lib/python3.10/site-packages/assignment2/__init__.py to __init__.cpython-310.pyc
+byte-compiling /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/lib/python3.10/site-packages/assignment2/assignment2.py to assignment2.cpython-310.pyc
+running install_data
+creating /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/share/ament_index
+creating /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/share/ament_index/resource_index
+creating /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/share/ament_index/resource_index/packages
+copying resource/assignment2 -> /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/share/ament_index/resource_index/packages
+copying package.xml -> /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/share/assignment2
+copying launch/assignment2.launch.py -> /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/share/assignment2
+copying launch/test.launch.py -> /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/share/assignment2
+creating /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/share/assignment2/launch
+copying launch/single_rrbot.urdf -> /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/share/assignment2/launch
+running install_egg_info
+Copying ../build/assignment2/assignment2.egg-info to /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/lib/python3.10/site-packages/assignment2-0.0.0-py3.10.egg-info
+running install_scripts
+Installing coordinates script to /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/lib/assignment2
+Installing dummy_object_detector script to /home/drew/repos/IntroRobotics/hw/hw2/install/assignment2/lib/assignment2
+writing list of installed files to '/home/drew/repos/IntroRobotics/hw/hw2/build/assignment2/install.log'
