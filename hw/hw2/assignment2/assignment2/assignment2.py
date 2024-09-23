@@ -33,11 +33,6 @@ def euler_rotation_matrix(alpha: float,beta: float,gamma:float) -> np.ndarray:
     # It may seem redundant but you can substantially increase the speed of computing
     # the rotation by precomputing the sine and cosine values
 
-
-    #This is an example of how to define a 2d matrix using NUMPY
-    R = np.array([[1,0,0],
-                  [0,1,0],
-                  [0,0,1]])
     # Rotation around z-axis (yaw component)
     Rz = np.array([[np.cos(gamma), -np.sin(gamma), 0], 
                    [np.sin(gamma), np.cos(gamma), 0], 
@@ -67,9 +62,9 @@ def quaternion_rotation_matrix(Q: np.ndarray) -> np.ndarray:
 
     """
 
-    Rq = np.array([[2*(Q[0]**2 + Q[1]**2) - 1), 2*(Q[1] * Q[2] - Q[0] * Q[3]), 2*(Q[1] * Q[3] + Q[0] * Q[2])],
-                   [2*(Q[1] * Q[2] + Q[0] * Q[3]), 2*(Q[0]**2 + Q[2]**2) - 1), 2*(Q[2] * Q[3] - Q[0] * Q[1])],
-                   [2*(Q[1] * Q[3] - Q[0] * Q[2]), 2*(Q[2] * Q[3] + Q[0] * Q[1]), 2*(Q[0]**2 + Q[3]**2) - 1)]])
+    Rq = np.array([[2*(Q[0]**2 + Q[1]**2) - 1, 2*(Q[1] * Q[2] - Q[0] * Q[3]), 2*(Q[1] * Q[3] + Q[0] * Q[2])],
+                   [2*(Q[1] * Q[2] + Q[0] * Q[3]), 2*(Q[0]**2 + Q[2]**2) - 1, 2*(Q[2] * Q[3] - Q[0] * Q[1])],
+                   [2*(Q[1] * Q[3] - Q[0] * Q[2]), 2*(Q[2] * Q[3] + Q[0] * Q[1], 2*(Q[0]**2 + Q[3]**2) - 1)]])
 
 
     return Rq
@@ -91,7 +86,7 @@ def quaternion_multiply(Q0: np.ndarray,Q1: np.ndarray) -> np.ndarray:
     q03 = Q0[0]*Q1[0] - Q0[1]*Q1[1] - Q0[2]*Q1[2] - Q0[3]*Q1[3]
     q13 = Q0[0]*Q1[1] + Q0[1]*Q1[0] + Q0[2]*Q1[3] - Q0[3]*Q1[2]
     q23 = Q0[0]*Q1[2] + Q0[2]*Q1[0] + Q0[3]*Q1[1] - Q0[1]*Q1[3]
-    q23 = Q0[0]*Q1[3] + Q0[3]*Q1[0] + Q0[1]*Q1[2] - Q0[2]*Q1[1]
+    q33 = Q0[0]*Q1[3] + Q0[3]*Q1[0] + Q0[1]*Q1[2] - Q0[2]*Q1[1]
 
     return np.ndarray([q03, q13, q23, q33])
 
@@ -111,7 +106,7 @@ def quaternion_to_euler(Q: np.ndarray) -> np.ndarray:
 
     alpha = np.arctan2(2*(Q[0] * Q[1] + Q[2]*Q[3]), 1 - 2*(Q[1]**2 + Q[2]**2))
     beta = 2*(Q[0]*Q[2] - Q[3]*Q[1])
-    gamma = np.arctan2(2*(Q[0]*Q[3] + Q[1]*Q[2]), 1 - 2*(Q[2]**2 + Q[3]*)**2)
+    gamma = np.arctan2(2*(Q[0]*Q[3] + Q[1]*Q[2]), 1 - 2*(Q[2]**2 + Q[3]**2)**2)
     return np.ndarray([alpha, beta, gamma])
 
 
@@ -152,7 +147,7 @@ def inverse_rotation(p2: np.ndarray,alpha: float,beta: float,gamma: float) -> np
 
     """
     R = euler_rotation_matrix(alpha, beta, gamma)
-    p3 = R.T * p1
+    p3 = R.T * p2
     return p3
 
 def transform_pose(P: np.ndarray,Q: np.ndarray,T: np.ndarray,R: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -179,8 +174,15 @@ def transform_pose(P: np.ndarray,Q: np.ndarray,T: np.ndarray,R: np.ndarray) -> T
     :return: New Quaternion, A 4 element array containing the orientation (q0,q1,q2,q3) in the new coordinate frame
 
     """
+    R_quaternion = quaternion_rotation_matrix(R)
+    P_transformed = np.dot(R_quaternion , P)
 
-    return None
+    # Step 2: Translate the rotated position
+    P_transformed = P_transformed + T
+
+    # Step 3: Update the orientation by multiplying the quaternions
+    Q_transformed = quaternion_multiply(R, Q)
+    return P_transformed, Q_transformed
 
 
 
