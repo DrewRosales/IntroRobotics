@@ -54,7 +54,7 @@ def hr_matrix(k: np.ndarray,t: np.ndarray,q: float) -> np.ndarray:
     :return: A 4x4 Homogenous representation matrix
     '''
     T = np.eye(4)
-    R = axis_angle_rot_matrix(k, t)
+    R = axis_angle_rot_matrix(k, q)
 
     T[:3, :3] = R
     T[:3, 3] = t.flatten()
@@ -75,11 +75,11 @@ def inverse_hr_matrix(k: np.ndarray,t: np.ndarray,q: float) -> np.ndarray:
     '''
     T_inv = np.eye(4) 
 
-    R_inv = axis_angle_rot_matrix(k, t).T
+    R_inv = axis_angle_rot_matrix(k, q).T
     t_inv = -R_inv @ t
 
-    T[:3, :3] = R_inv
-    T[:3, 3] = t_inv.flatten()
+    T_inv[:3, :3] = R_inv
+    T_inv[:3, 3] = t_inv.flatten()
 
     
 
