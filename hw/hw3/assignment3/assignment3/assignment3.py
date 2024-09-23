@@ -83,8 +83,7 @@ def inverse_hr_matrix(k: np.ndarray,t: np.ndarray,q: float) -> np.ndarray:
 
     
 
-    #TODO: 10 pts
-    return None
+    return T_inv
 
 class KinematicChain:
     def __init__(self,ks: np.ndarray,ts: np.ndarray):
