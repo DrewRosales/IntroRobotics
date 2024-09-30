@@ -112,14 +112,23 @@ class KinematicChain:
         :return: A 3 element vector containing the position of joint[index]
         '''
 
-        #TODO: 30 pts
-        return None 
+        if index == -1:
+            index = self.N_joints
+        
+        T = np.eye(4)
+
+        for i in range(index, self.N_joints):
+            T = T @ hr_matrix(self.k[i], self.t[i], Q[i])
+
+        p_i = np.append(p_i, 1)
+
+        return (T @ p_i)[:3]
 
     def pseudo_inverse(self,
                         theta_start: np.ndarray,
                         p_eff_N: np.ndarray,
                         x_end: np.ndarray,
-                        max_steps: int=np.inf) -> np.ndarray:
+                        max_steps: float=np.inf) -> np.ndarray:
         '''
         Performs the inverse_kinematics using the pseudo-jacobian
 
@@ -168,8 +177,25 @@ class KinematicChain:
         :return: An 3xN 2d matrix containing the jacobian matrix
         '''
 
-        #TODO: 30 pts
-        return None 
+        J = np.zeros((3, self.N_joints))
+
+        p_eff = self.pose(Q, self.N_joints-1, p_eff_N)
+
+        T = np.eye(4)
+
+        for i in range(self.N_joints):
+            k_i = self.k[i]
+
+            joint_pose = self.pose(Q, index=i)
+
+            r = p_eff - joint_pose
+
+            J[:, i] = np.cross(k_i, r)
+            t_i = self.t[i]
+            q_i = Q[i]
+            T = T @ hr_matrix(k_i, t_i, q_i)
+
+        return J 
 
 
 def main():
