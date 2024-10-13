@@ -25,6 +25,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'diffdrive_sim = en613_control.diffdrive_sim:main',
         ],
     },
 )

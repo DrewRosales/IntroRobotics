@@ -28,7 +28,7 @@
   <joint name="base_to_chassis" type="fixed">
     <parent link="base"/>
     <child link="chassis"/>
-    <origin rpy="0 0 1.5707" xyz="0 0 0"/>
+    <origin rpy="0 0 1.5707" xyz="0 0 0.4"/>
   </joint>
 
   <link name="right_wheel">
@@ -40,11 +40,11 @@
     </visual>
   </link>
 
-  <joint name="base_to_right_wheel" type="revolute">
+  <joint name="base_to_right_wheel" type="continuous">
     <parent link="chassis"/>
     <child link="right_wheel"/>
     <origin rpy="-1.5707 0 0" xyz="0 -0.4375 0"/>
-    <limit effort="1000.0" lower="0.0" upper="0.548" velocity="0.5"/>
+    <axis xyz="0 0 1"/> 
   </joint>
 
   <link name="left_wheel">
@@ -57,16 +57,15 @@
     </visual>
   </link>
 
-  <joint name="chassis_to_left_wheel" type="revolute">
+  <joint name="chassis_to_left_wheel" type="continuous">
     <parent link="chassis"/>
     <child link="left_wheel"/>
     <origin rpy="-1.5707 0 0" xyz="0 0.4375 0"/>
-    <limit effort="1000.0" lower="0.0" upper="0.548" velocity="0.5"/>
+    <axis xyz="0 0 1"/> 
   </joint>
 
   <link name="lidar_dome">
     <visual>
-      <origin rpy="0 0 0" xyz="0 0.3 0.0375"/>
       <geometry>
         <sphere radius="0.03125"/>
       </geometry>
@@ -74,8 +73,9 @@
     </visual>
   </link>
 
-  <joint name="base_to_lidar_dome" type="fixed">
-    <parent link="base"/>
+  <joint name="chassis_to_lidar_dome" type="fixed">
+    <parent link="chassis"/>
     <child link="lidar_dome"/>
+    <origin rpy="0 0 -1.5707" xyz="0.3 0 0.0375"/>
   </joint>
 </robot>

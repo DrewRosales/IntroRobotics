@@ -23,6 +23,7 @@ def generate_launch_description():
         raise FileNotFoundError(f"RViz configuration file not found: {rviz_config_file}")
 
     return LaunchDescription([
+
         Node(
             package="joint_state_publisher",
             executable="joint_state_publisher",
@@ -36,6 +37,13 @@ def generate_launch_description():
             name="robot_state_publisher",
             output="screen",
             parameters=[{"robot_description": robot_description}]
+        ),
+
+        Node(
+            package="en613_control",
+            executable="diffdrive_sim",
+            name="diffdrive_sim",
+            output="screen",
         ),
 
         ExecuteProcess(
