@@ -14,7 +14,6 @@
     <color rgba="1 1 1 0.8"/>
   </material>
 
-  <link name="base"/>
 
   <link name="chassis">
     <visual>
@@ -22,14 +21,9 @@
         <box size="0.825 0.825  0.075"/>
       </geometry>
       <material name="white"/>
+    <origin rpy="0 0 1.5707" xyz="0 0 0"/>
     </visual>
   </link>
-
-  <joint name="base_to_chassis" type="fixed">
-    <parent link="base"/>
-    <child link="chassis"/>
-    <origin rpy="0 0 1.5707" xyz="0 0 0.4"/>
-  </joint>
 
   <link name="right_wheel">
     <visual>

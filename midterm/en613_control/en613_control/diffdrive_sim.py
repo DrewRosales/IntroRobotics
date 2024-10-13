@@ -60,12 +60,13 @@ class DiffDriveSim(Node):
         # update x-position, y-position, and heading
         self.x = self.x + v*self.dt
         # update Left Wheel angle and Right Wheel angle
-        self.q = self.q + u*self.dt
+        self.q = self.q + u*self.dt/self.wheel_radius
 
     def publish_joint_state(self):
         joint_state_msg = JointState()
         joint_state_msg.header.stamp = self.get_clock().now().to_msg()
         joint_state_msg.name = ["left_wheel_angle", "right_wheel_angle"]
+        joint_state_msg.position = self.q
         self.joint_publisher.publish(joint_state_msg)
 
     def tf_callback(self):
@@ -75,6 +76,7 @@ class DiffDriveSim(Node):
         t.child_frame_id = "chassis"
         t.transform.translation.x = self.x[0]
         t.transform.translation.y = self.x[1]
+        t.transform.translation.z = 0.4
         t.transform.rotation.z = np.sin(self.x[2]/2)
         t.transform.rotation.w = np.cos(self.x[2]/2)
         self.tf_broadcaster.sendTransform(t)

@@ -26,7 +26,7 @@ Visualization Manager:
         Z: 0
       Plane: XY
       Plane Cell Count: 10
-      Reference Frame: base
+      Reference Frame: odom
     - Class: rviz_default_plugins/RobotModel
       Name: RobotModel
       Enabled: true
@@ -36,9 +36,14 @@ Visualization Manager:
       Alpha: 1.0
       Visual Enabled: true
       Collision Enabled: false
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: true
+      Show Axes: true
+      Show Arrows: true
   Global Options:
     Background Color: [0, 0, 0]
-    Fixed Frame: base
+    Fixed Frame: odom
     Frame Rate: 30
     Name: root
   Tools:
