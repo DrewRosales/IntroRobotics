@@ -6,6 +6,7 @@ from geometry_msgs.msg import Twist
 from std_srvs.srv import Trigger
 from tf2_ros import TransformBroadcaster, TransformStamped
 from sensor_msgs.msg import JointState
+from rclpy.qos import QoSProfile
 import numpy as np
 
 class DiffDriveSim(Node):
@@ -29,7 +30,8 @@ class DiffDriveSim(Node):
             10
         )
 
-        self.joint_publisher  = self.create_publisher(JointState, '/joint_states', 10)
+        qos_profile = QoSProfile(depth=10)
+        self.joint_publisher  = self.create_publisher(JointState, '/joint_states', qos_profile)
 
         self.tf_broadcaster = TransformBroadcaster(self)
 
@@ -65,7 +67,7 @@ class DiffDriveSim(Node):
     def publish_joint_state(self):
         joint_state_msg = JointState()
         joint_state_msg.header.stamp = self.get_clock().now().to_msg()
-        joint_state_msg.name = ["left_wheel_angle", "right_wheel_angle"]
+        joint_state_msg.name = ["chassis_to_left_wheel", "chassis_to_right_wheel"]
         joint_state_msg.position = self.q
         self.joint_publisher.publish(joint_state_msg)
 

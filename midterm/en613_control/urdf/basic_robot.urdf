@@ -34,7 +34,7 @@
     </visual>
   </link>
 
-  <joint name="base_to_right_wheel" type="continuous">
+  <joint name="chassis_to_right_wheel" type="continuous">
     <parent link="chassis"/>
     <child link="right_wheel"/>
     <origin rpy="-1.5707 0 0" xyz="0 -0.4375 0"/>
