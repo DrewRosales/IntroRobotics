@@ -1,0 +1,34 @@
+[0.580s] Invoking command in '/home/drew/repos/IntroRobotics/midterm/en613_control': PYTHONPATH=/home/drew/repos/IntroRobotics/midterm/en613_control/build/en613_control/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/drew/repos/IntroRobotics/midterm/en613_control/install/en613_control/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base build/en613_control build --build-base /home/drew/repos/IntroRobotics/midterm/en613_control/build/en613_control/build install --record /home/drew/repos/IntroRobotics/midterm/en613_control/build/en613_control/install.log --single-version-externally-managed install_data
+[0.782s] running egg_info
+[0.782s] creating build/en613_control/en613_control.egg-info
+[0.782s] writing build/en613_control/en613_control.egg-info/PKG-INFO
+[0.782s] writing dependency_links to build/en613_control/en613_control.egg-info/dependency_links.txt
+[0.783s] writing entry points to build/en613_control/en613_control.egg-info/entry_points.txt
+[0.783s] writing requirements to build/en613_control/en613_control.egg-info/requires.txt
+[0.783s] writing top-level names to build/en613_control/en613_control.egg-info/top_level.txt
+[0.783s] writing manifest file 'build/en613_control/en613_control.egg-info/SOURCES.txt'
+[0.784s] reading manifest file 'build/en613_control/en613_control.egg-info/SOURCES.txt'
+[0.784s] adding license file 'LICENSE'
+[0.784s] writing manifest file 'build/en613_control/en613_control.egg-info/SOURCES.txt'
+[0.784s] running build
+[0.784s] running build_py
+[0.785s] creating /home/drew/repos/IntroRobotics/midterm/en613_control/build/en613_control/build
+[0.785s] creating /home/drew/repos/IntroRobotics/midterm/en613_control/build/en613_control/build/lib
+[0.785s] creating /home/drew/repos/IntroRobotics/midterm/en613_control/build/en613_control/build/lib/en613_control
+[0.785s] copying en613_control/__init__.py -> /home/drew/repos/IntroRobotics/midterm/en613_control/build/en613_control/build/lib/en613_control
+[0.785s] running install
+[0.785s] running install_lib
+[0.785s] creating /home/drew/repos/IntroRobotics/midterm/en613_control/install/en613_control/lib/python3.10/site-packages/en613_control
+[0.786s] copying /home/drew/repos/IntroRobotics/midterm/en613_control/build/en613_control/build/lib/en613_control/__init__.py -> /home/drew/repos/IntroRobotics/midterm/en613_control/install/en613_control/lib/python3.10/site-packages/en613_control
+[0.786s] byte-compiling /home/drew/repos/IntroRobotics/midterm/en613_control/install/en613_control/lib/python3.10/site-packages/en613_control/__init__.py to __init__.cpython-310.pyc
+[0.786s] running install_data
+[0.786s] creating /home/drew/repos/IntroRobotics/midterm/en613_control/install/en613_control/share/ament_index
+[0.786s] creating /home/drew/repos/IntroRobotics/midterm/en613_control/install/en613_control/share/ament_index/resource_index
+[0.786s] creating /home/drew/repos/IntroRobotics/midterm/en613_control/install/en613_control/share/ament_index/resource_index/packages
+[0.786s] copying resource/en613_control -> /home/drew/repos/IntroRobotics/midterm/en613_control/install/en613_control/share/ament_index/resource_index/packages
+[0.786s] copying package.xml -> /home/drew/repos/IntroRobotics/midterm/en613_control/install/en613_control/share/en613_control
+[0.786s] running install_egg_info
+[0.788s] Copying build/en613_control/en613_control.egg-info to /home/drew/repos/IntroRobotics/midterm/en613_control/install/en613_control/lib/python3.10/site-packages/en613_control-0.0.0-py3.10.egg-info
+[0.788s] running install_scripts
+[0.802s] writing list of installed files to '/home/drew/repos/IntroRobotics/midterm/en613_control/build/en613_control/install.log'
+[0.819s] Invoked command in '/home/drew/repos/IntroRobotics/midterm/en613_control' returned '0': PYTHONPATH=/home/drew/repos/IntroRobotics/midterm/en613_control/build/en613_control/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/drew/repos/IntroRobotics/midterm/en613_control/install/en613_control/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base build/en613_control build --build-base /home/drew/repos/IntroRobotics/midterm/en613_control/build/en613_control/build install --record /home/drew/repos/IntroRobotics/midterm/en613_control/build/en613_control/install.log --single-version-externally-managed install_data
