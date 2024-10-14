@@ -41,10 +41,6 @@ class DiffDrivePid(Node):
             msg.pose.position.y,
         ])
 
-    def get_theta(self, q):
-        return math.atan2(2*(q.w * q.z - q.x *q.y), 1-2*(q.y * q.y + q.z * q.z))
-
-
     def run(self):
         if self.x_goal is None:
             return
@@ -53,45 +49,25 @@ class DiffDrivePid(Node):
             # 1. Update robot's position by subscribing to the chassis->odom transform
             now = rclpy.time.Time()
             T_chassis_odom = self.tf_buffer.lookup_transform("odom", "chassis", now)
-            T_lidar_odom = self.tf_buffer.lookup_transform("odom", "lidar_dome", now)
+            #T_lidar_odom = self.tf_buffer.lookup_transform("odom", "lidar_dome", now)
 
             x_pose_current = T_chassis_odom.transform.translation.x
             y_pose_current = T_chassis_odom.transform.translation.y
-            x_lidar = T_lidar_odom.transform.translation.x
-            y_lidar = T_lidar_odom.transform.translation.y
-            #quaternion = T_chassis_odom.transform.rotation
+            q = T_chassis_odom.transform.rotation
 
-            #theta_lidar = self.get_theta(T_lidar_odom.transform.rotation)
 
-            #theta_current = self.get_theta(quaternion)
+            theta_current  = np.arctan2(2*(q.w * q.z + q.x *q.y), 1-2*(q.y * q.y + q.z * q.z))
+            theta_current = (theta_current + 2 * np.pi) % (2 * np.pi)
 
-            theta_current = np.arctan2(y_lidar - y_pose_current, x_lidar - x_pose_current)
             x_current = np.array([x_pose_current, y_pose_current])
             v_current = x_current - self.x_prev
 
             self.get_logger().info(f"{theta_current}")
 
-            #theta_current = theta_current + math.atan2(self.x_error[1], self.x_error[0])
-            self.x_error = x_current - self.x_goal
-
-            desired_heading = math.atan2(self.x_error[1], self.x_error[0])
-
-            # Compute heading error and normalize it
-            heading_error = desired_heading - theta_current
-
-            # Normalize heading error to the range [-pi, pi]
-            heading_error = (heading_error + np.pi) % (2 * np.pi) - np.pi
-
-            # Adjust to ensure a valid control input (rotation direction)
-            if abs(heading_error) > np.pi / 2:
-                # If the heading error is greater than 90 degrees, turn the other way
-                if heading_error > 0:
-                    heading_error -= np.pi  # Rotate to the left
-                else:
-                    heading_error += np.pi  # Rotate to the right
-
             x_p = np.array([x_current[0] + self.l*np.cos(theta_current), 
                             x_current[1] + self.l*np.sin(theta_current)])
+
+            self.x_error = x_p - self.x_goal
 
             R = np.array([[np.cos(theta_current), np.sin(theta_current)],
                           [-np.sin(theta_current), np.cos(theta_current)]])
