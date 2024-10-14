@@ -11,7 +11,7 @@ import numpy as np
 
 class DiffDriveSim(Node):
     def __init__(self):
-        super().__init__('diff_drive_sim')
+        super().__init__('diffdrive_sim')
 
         self.x = np.array([0, 0, 0])
         self.q = np.array([0, 0])

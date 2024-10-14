@@ -26,6 +26,7 @@ setup(
     entry_points={
         'console_scripts': [
             'diffdrive_sim = en613_control.diffdrive_sim:main',
+            'diffdrive_pid = en613_control.diffdrive_pid:main',
         ],
     },
 )

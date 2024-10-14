@@ -70,6 +70,6 @@
   <joint name="chassis_to_lidar_dome" type="fixed">
     <parent link="chassis"/>
     <child link="lidar_dome"/>
-    <origin rpy="0 0 -1.5707" xyz="0.3 0 0.0375"/>
+    <origin rpy="0 0 0" xyz="0.3 0 0.0375"/>
   </joint>
 </robot>
