@@ -125,8 +125,22 @@ def compute_safe_desired_vel(agent: Agent, goal: np.ndarray, obstacles: List[Obs
     Output
       :return: safe_vel: a 2 element numpy.ndarray with the x and y components of the velocity
     """
+    desired_velocity = goal - agent.position
+    desired_velocity_magnitude = np.linalg.norm(desired_velocity)
+   
+    # normalize
+    desired_direction = desired_velocity / desired_velocity_magnitude
+    desired_velocity = desired_direction * np.min(desired_velocity_magnitude, agent.max_speed)
 
-    #TODO Implement this function. 50 pts
+    for obstacle in obstacles:
+        vo = velocity_obstacle(agent, obstacle)
+        relative_vel = desired_velocity - vo.origin
+        left_proj = relative_vel * vo.left_vector
+        right_proj = relative_vel * vo.right_vector
+
+        if 
+
+
     raise NotImplementedError
 
 def extract_coords(polygon):
