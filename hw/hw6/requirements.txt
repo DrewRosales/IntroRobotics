@@ -1,0 +1,6 @@
+matplotlib
+numpy
+geopandas==0.10 
+earthpy==0.9.4 
+shapely==1.7.1
+descartes
