@@ -71,6 +71,17 @@ class Node:
     def __lt__(self, other):
         return self.f < other.f
 
+def create_path_grid(cost_to_come, current):
+    path = [current]
+    while current in cost_to_come:
+        current = cost_to_come[current]
+        path.append(current)
+    path.reverse()
+    return path
+
+def heuristic(a, b):
+    return np.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
+
 def a_star_grid(map: np.ndarray, start:Tuple[int, int], goal: Tuple[int, int]) -> List[Tuple[int, int]]:
     """
     This function will compute the optimal path between a start point and an end point given a grid-based
@@ -91,9 +102,46 @@ def a_star_grid(map: np.ndarray, start:Tuple[int, int], goal: Tuple[int, int]) -
                     the starting cell as the first element of the list and the ending cell as the last
                     element in the list
     """
+    open_set = []
+    heappush(open_set, (0, start))
+    cost_to_come = {}
+    g = {start: 0}
+    f = {start: heuristic(start, goal)}
 
-    #TODO Implement this function. 50 pts
-    raise NotImplementedError
+    m, n = map.shape
+
+    while open_set:
+        _, current = heappop(open_set)
+        
+        if current == goal:
+            return create_path_grid(cost_to_come, current)
+
+        neighbors = []
+        for i, j in [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (1, 1), (-1, 1), (1, -1)]:
+            neighbor = (current[0] + i, current[1] + j)
+
+            if 0 <= neighbor[0] < m and 0 <= neighbor[1] < n and map[neighbor] == 0:
+                neighbors.append(neighbor)
+
+        for neighbor in neighbors:
+            if 0 <= neighbor[0] < m and 0 <= neighbor[1] < n and map[neighbor] == 0:
+
+                cost_to_go = 0
+
+                if abs(neighbor[0] - current[0]) + abs(neighbor[1] - current[1]) == 1:
+                    cost_to_go = 1
+                else:
+                    cost_to_go = np.sqrt(2)
+
+                tentative_g_score = g[current] + cost_to_go
+                
+                if neighbor not in g or tentative_g_score < g[neighbor]:
+                    cost_to_come[neighbor] = current
+                    g[neighbor] = tentative_g_score
+                    f[neighbor] = tentative_g_score + heuristic(neighbor, goal)
+                    heappush(open_set, (f[neighbor], neighbor))
+    
+    return []
 
 def create_graph_path(goal : Node):
     path = []
@@ -193,7 +241,7 @@ def grid_demo():
 
 def main():
     graph_demo()
-    #grid_demo()
+    grid_demo()
 
 if __name__ == '__main__':
     main()
