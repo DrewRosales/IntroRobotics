@@ -102,7 +102,12 @@ def velocity_obstacle(agent: Agent, obstacle: Obstacle):
     right = tangent * (radius/relative_pose) - direction
     right /= np.linalg.norm(right)
 
-    VO = VelocityObstacle(origin = obstacle.velocity, left_vector=left, right_vector=right)
+    origin = obstacle.velocity
+
+    VO = VelocityObstacle()
+    VO.origin = origin
+    VO.left_vector = left
+    VO.right_vector = right
     return VO
 
 def compute_safe_desired_vel(agent: Agent, goal: np.ndarray, obstacles: List[Obstacle]):
@@ -130,18 +135,30 @@ def compute_safe_desired_vel(agent: Agent, goal: np.ndarray, obstacles: List[Obs
    
     # normalize
     desired_direction = desired_velocity / desired_velocity_magnitude
-    desired_velocity = desired_direction * np.min(desired_velocity_magnitude, agent.max_speed)
+    desired_velocity = desired_direction * min(desired_velocity_magnitude, agent.max_speed)
 
     for obstacle in obstacles:
         vo = velocity_obstacle(agent, obstacle)
+        if vo is None:
+            continue
         relative_vel = desired_velocity - vo.origin
         left_proj = relative_vel * vo.left_vector
         right_proj = relative_vel * vo.right_vector
 
-        if 
+        # if agent is inside
+        if left_proj >= 0 and right_proj >= 0:
+            # shift to max speed
+            max_vel = agent.max_speed * desired_velocity
+            max_rel_vel = max_vel - vo.origin
+            left_proj_max = max_rel_vel * vo.left_vector
+            right_proj_max = max_rel_vel * vo.right_vector
+            
+            # inside again
+            if left_proj_max >= 0 and right_proj_max >= 0:
+                return None
 
-
-    raise NotImplementedError
+            desired_velocity = max_vel
+        return desired_velocity
 
 def extract_coords(polygon):
     """

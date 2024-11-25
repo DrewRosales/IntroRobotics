@@ -64,6 +64,7 @@ class LandmarkDetector(object):
 
     """
 
+<<<<<<< HEAD
     x_k, y_k, theta = x
     num_landmarks = self.landmarks.shape[0]
 
@@ -79,6 +80,11 @@ class LandmarkDetector(object):
         z += w
 
     return z
+=======
+    #25 points: Implement this funciton
+
+    raise NotImplementedError
+>>>>>>> ef1e312e4d85d060950acdcd33e2ebc771769b93
 
   def jacobian(self,x):
     """
@@ -91,6 +97,7 @@ class LandmarkDetector(object):
       :return: H: The resulting Jacobian matrix H for the sensor with shape (2*N_Landmarks,3)
       
     """
+<<<<<<< HEAD
     x_k, y_k, theta = x
     H = []
     for landmark in self.landmarks:
@@ -137,6 +144,12 @@ def update(Sensor, y, x, sigma_pred, W):
     sigma_posterior = (np.eye(sigma_pred.shape[0]) - K@H) @ sigma_pred
 
     return x_posterior, sigma_posterior
+=======
+
+    #25 points: Implement this funciton
+
+    raise NotImplementedError
+>>>>>>> ef1e312e4d85d060950acdcd33e2ebc771769b93
 
 
 def EKF(DiffDrive,Sensor,y,x_hat,sigma,u,dt,V=None,W=None):
@@ -165,7 +178,13 @@ def EKF(DiffDrive,Sensor,y,x_hat,sigma,u,dt,V=None,W=None):
 
     """
 
+<<<<<<< HEAD
     x_pred, sigma_pred = predict(DiffDrive, x_hat, sigma, u, dt, V)
     x_posterior, sigma_posterior = update(Sensor, y, x_pred, sigma_pred, W)
 
     return x_posterior, sigma_posterior
+=======
+    #25 points: Implement this funciton
+
+    raise NotImplementedError
+>>>>>>> ef1e312e4d85d060950acdcd33e2ebc771769b93
