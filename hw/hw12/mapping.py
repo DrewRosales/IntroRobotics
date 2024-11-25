@@ -56,6 +56,7 @@ class QuadMap:
         while depth <= self.max_depth:
             if depth == self.max_depth:
                 if node.state != state:
+                    node.state = state
                     if node.parent:
                         node.parent.combine()
                 break
@@ -206,7 +207,9 @@ class QuadMapNode:
         child_centers = [(1, 1), (-1, 1), (-1, -1), (1, -1)]
         for child_center in child_centers:
             child_origin = self.origin + np.array(child_center) * child_size / 2
-            self.children.append(QuadMapNode(parent=self, origin=child_origin, size=child_size))
+            child = QuadMapNode(parent=self, origin=child_origin, size=child_size)
+            child.state = self.state
+            self.children.append(child)
 
     def combine(self):
         """
