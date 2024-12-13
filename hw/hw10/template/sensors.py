@@ -64,9 +64,27 @@ class LandmarkDetector(object):
 
     """
 
+<<<<<<< HEAD
+    x_k, y_k, theta = x
+    num_landmarks = self.landmarks.shape[0]
+
+    z = np.zeros(2 * num_landmarks)
+
+    for i, landmark in enumerate(self.landmarks):
+        x_li, y_li = landmark
+
+        z[2*i] = np.sqrt((x_li - x_k)**2 + (y_li - y_k)**2)
+        z[2*i + 1] = np.arctan2((x_li - x_k), (y_li - y_k))
+
+    if w is not None:
+        z += w
+
+    return z
+=======
     #25 points: Implement this funciton
 
     raise NotImplementedError
+>>>>>>> ef1e312e4d85d060950acdcd33e2ebc771769b93
 
   def jacobian(self,x):
     """
@@ -79,10 +97,59 @@ class LandmarkDetector(object):
       :return: H: The resulting Jacobian matrix H for the sensor with shape (2*N_Landmarks,3)
       
     """
+<<<<<<< HEAD
+    x_k, y_k, theta = x
+    H = []
+    for landmark in self.landmarks:
+        x_li, y_li = landmark
+
+        dist = np.sqrt((x_k - x_li)**2 + (y_k - y_li)**2)
+        H_i = np.array([[(x_k - x_li)/dist, (y_k - y_li)/dist, 0],
+                        [(x_li - x_k)/dist**2, (y_li - y_k)/dist**2, -1 ]])
+
+        H.append(H_i)
+
+    return np.vstack(H)
+
+def predict(DiffDrive, x_hat, sigma, u, dt, V):
+    """
+        :param y: measurement made at time t
+        :param x_hat: initial estimate of state at time t-1
+        :param sigma: initial covariance at time t-1
+        :param u: input to the system at time t-1
+        :param V: measurement noise covariance matrix
+        :param dt: timestep
+    """
+
+    x_pred = DiffDrive.forward(x=x_hat, u=u, v=None, dt=dt)
+
+    A, B = DiffDrive.linearize(x=x_hat, u=u, dt=dt)
+
+    V = DiffDrive.get_V()
+
+    sigma_pred = A @ sigma @ A.T + V
+
+    return x_pred, sigma_pred
+
+def update(Sensor, y, x, sigma_pred, W):
+    y_pred = Sensor.measure(x)
+    H = Sensor.jacobian(x)
+
+    W = Sensor.get_W() if W is None else W
+
+    residual = y - y_pred
+    S = H @ sigma_pred @ H.T + W
+    K = sigma_pred @ H.T @ np.linalg.pinv(S)
+    x_posterior = x + K @ residual
+    sigma_posterior = (np.eye(sigma_pred.shape[0]) - K@H) @ sigma_pred
+
+    return x_posterior, sigma_posterior
+=======
 
     #25 points: Implement this funciton
 
     raise NotImplementedError
+>>>>>>> ef1e312e4d85d060950acdcd33e2ebc771769b93
 
 
 def EKF(DiffDrive,Sensor,y,x_hat,sigma,u,dt,V=None,W=None):
@@ -111,6 +178,13 @@ def EKF(DiffDrive,Sensor,y,x_hat,sigma,u,dt,V=None,W=None):
 
     """
 
+<<<<<<< HEAD
+    x_pred, sigma_pred = predict(DiffDrive, x_hat, sigma, u, dt, V)
+    x_posterior, sigma_posterior = update(Sensor, y, x_pred, sigma_pred, W)
+
+    return x_posterior, sigma_posterior
+=======
     #25 points: Implement this funciton
 
     raise NotImplementedError
+>>>>>>> ef1e312e4d85d060950acdcd33e2ebc771769b93

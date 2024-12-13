@@ -111,7 +111,11 @@ class DifferentialDrive(object):
 
     return np.array([psi_left, psi_right])
   
+<<<<<<< HEAD
+  def PID(self,x, x_goal,dt=1.0):
+=======
   def PID(self,x, x_goal,dt=1):
+>>>>>>> ef1e312e4d85d060950acdcd33e2ebc771769b93
     """
     Computes the Proportional control for the diff drive system given
     the current state and the desired state. Do not worry about the derivative
@@ -165,8 +169,26 @@ class DifferentialDrive(object):
       :return: A: The Jacobian of the kinematics with respect to x which has shape (3,3)
       :return: B: The Jacobian of the kinematics with respect to u which has shape (3,2)
 
+<<<<<<< HEAD
+    """ 
+    x_k, y_k, theta = x
+    v, omega = u
+
+    A = np.array([[1, 0, -v*np.sin(theta) * dt],
+                  [0, 1, v*np.cos(theta) * dt],
+                  [0, 0, 1]])
+
+    B = np.array([
+        [np.cos(theta) * dt, 0],
+        [np.sin(theta) * dt, 0],
+        [0, dt]
+    ])
+
+    return A, B
+=======
     """
     
     #25 points: Implement this function
     
     raise NotImplementedError
+>>>>>>> ef1e312e4d85d060950acdcd33e2ebc771769b93
