@@ -22,8 +22,7 @@ setup(
         (os.path.join('share', package_name,'models/globe'), glob('./models/globe/*'))
 
     ],
-    install_requires=['setuptools'],
-    zip_safe=True,
+    install_requires=['setuptools'], zip_safe=True,
     maintainer='ubuntu',
     maintainer_email='ubuntu@todo.todo',
     description='TODO: Package description',
@@ -33,8 +32,9 @@ setup(
         'console_scripts': [
             'spawn_demo = robot_spawner_pkg.spawn_demo:main',
             'spawn_scenario = robot_spawner_pkg.spawn_scenario:main',
-            'lidar_tf_publisher = robot_spawner_pkg.lidar_tf_publisher:main',
-            'localization = robot_spawner_pkg.localization:main'
+            #'lidar_tf_publisher = robot_spawner_pkg.lidar_tf_publisher:main',
+            #'localization = robot_spawner_pkg.localization:main',
+            #'diffdrive_sim = robot_spawner_pkg.diffdrive_sim:main',
         ],
     },
 )

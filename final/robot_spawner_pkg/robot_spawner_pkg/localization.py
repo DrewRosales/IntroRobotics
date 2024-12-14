@@ -31,7 +31,6 @@ class LocalizationNode(Node):
 
     def timer_callback(self):
 
-        self.get_logger().info("Localization Timer callback")
         if self.new_scan is None:
             return
 
@@ -54,7 +53,6 @@ class LocalizationNode(Node):
 
     def laser_callback(self, msg):
         self.new_scan = msg
-        self.get_logger().info("Localization Received new scan!!")
 
 
 def main(args=None):

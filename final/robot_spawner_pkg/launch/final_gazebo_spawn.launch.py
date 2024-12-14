@@ -41,7 +41,7 @@ def generate_launch_description():
     launch_file_dir = os.path.join(pkg_dir, 'launch')
 
     gazebo = ExecuteProcess(
-            cmd=['gazebo', '--verbose', world, '-s', 'libgazebo_ros_init.so', 
+            cmd=['gazebo', '--verbose', '-s', 'libgazebo_ros_init.so', 
             '-s', 'libgazebo_ros_factory.so'],
             output='screen')
 
@@ -52,13 +52,34 @@ def generate_launch_description():
                         arguments=['BasicBot', 'en613', map_folder],
                         output='screen')
 
-    localization = Node(package='robot_spawner_pkg', executable='localization',
-                        output='screen')
+    #localization = Node(package='robot_spawner_pkg', executable='localization',
+    #                    output='screen')
 
+    #diffdrive_sim = Node(package='robot_spawner_pkg', executable='diffdrive_sim',
+    #                    output='screen')
+
+    #diffdrive_pid = Node(package='robot_spawner_pkg', executable='diffdrive_pid',
+    #                    output='screen')
+    
+    #planner = Node(package='robot_spawner_pkg', executable='planner',
+    #                    output='screen')
+    #
+    joint_state_publisher = Node(
+        package="joint_state_publisher",
+        executable="joint_state_publisher",
+        name="joint_state_publisher",
+        namespace="en613",  # Add namespace
+        parameters=[{'use_sim_time': use_sim_time}],  # Add sim time parameter
+        output="screen",
+    )
     return LaunchDescription([
         gazebo,
         tf_helper,
         map_folder_launch_arg,
         spawn_entity,
-        localization
+        #localization,
+        #diffdrive_sim,
+        #diffdrive_pid,
+        #planner,
+        joint_state_publisher
     ])

@@ -79,6 +79,12 @@ def spawn_robot(node, client,
     request.initial_pose.position.x = float(start_position[0])
     request.initial_pose.position.y = float(start_position[1])
     request.initial_pose.position.z = float(start_position[2])
+
+    request.initial_pose.orientation.x = 0.0
+    request.initial_pose.orientation.y = 0.0
+    request.initial_pose.orientation.z = 0.0
+    request.initial_pose.orientation.w = 1.0
+
     node.get_logger().info("spawning robot")
 
     spawn_entity(node, client, request)
@@ -108,6 +114,8 @@ def spawn_goals(node, client, goal_list, robot_namespace = 'en613'):
         request.initial_pose.position.x = float(goal[0])
         request.initial_pose.position.y = float(goal[1])
         request.initial_pose.position.z = float(goal[2])
+
+
         node.get_logger().info(f"spawning goal{i}")
         spawn_entity(node, client, request)
 
@@ -141,9 +149,9 @@ def main():
     node.get_logger().info(f'Robot starting pose = {start}')
     node.get_logger().info(f'Goals  = {goal_list}')
 
-    spawn_map(node, client, map_folder)
+    #spawn_map(node, client, map_folder)
     spawn_robot(node, client, start)
-    spawn_goals(node, client, goal_list)
+    #spawn_goals(node, client, goal_list)
 
     node.get_logger().info("Done! Shutting down spawner node.")
     node.destroy_node()

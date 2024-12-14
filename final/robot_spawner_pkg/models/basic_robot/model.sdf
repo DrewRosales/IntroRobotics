@@ -1,9 +1,20 @@
 <?xml version='1.0'?>
   <sdf version='1.4'>
-  <model name="basic_robot">
+  <model name="en613">
      <static>false</static>
           <link name='chassis'>
             <pose>0 0 .1 0 0 0</pose>
+            <inertial>
+              <mass>5.0</mass>
+              <inertia>
+                <ixx> 0.104167 </ixx>
+                <ixy>0</ixy>
+                <ixz>0</ixz>
+                <iyy> 0.3375 </iyy>
+                <iyz>0</iyz>
+                <izz> 0.441667 </izz>
+              </inertia>
+            </inertial>
             <collision name='collision'>
               <geometry>
                 <box>
@@ -43,6 +54,15 @@
 
           <visual name='caster_visual'>
             <pose>-0.15 0 -0.05 0 0 0</pose>
+            <mass>0.5</mass>
+            <inertia>
+              <ixx>0.0005</ixx>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyy>0.0005</iyy>
+              <iyz>0</iyz>
+              <izz>0.0005</izz>
+            </inertia>
             <geometry>
               <sphere>
                 <radius>.05</radius>
@@ -52,6 +72,17 @@
       </link>
       <link name="left_wheel">
         <pose>0.1 0.13 0.1 0 1.5707 1.5707</pose>
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>0.002708</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.002708</iyy>
+            <iyz>0</iyz>
+            <izz>0.005</izz>
+          </inertia>
+        </inertial>
         <collision name="collision">
           <geometry>
             <cylinder>
@@ -71,6 +102,17 @@
       </link>
       <link name="right_wheel">
         <pose>0.1 -0.13 0.1 0 1.5707 1.5707</pose>
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>0.002708</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.002708</iyy>
+            <iyz>0</iyz>
+            <izz>0.005</izz>
+          </inertia>
+        </inertial>
         <collision name="collision">
           <geometry>
             <cylinder>
@@ -116,7 +158,15 @@
       
     <link name="laser_link">
       <inertial>
-        <mass>0.1</mass>
+        <mass>0.25</mass>
+        <inertia>
+          <ixx>0.000045</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000045</iyy>
+          <iyz>0</iyz>
+          <izz>0.000055</izz>
+        </inertia>
       </inertial>
       <pose>0.15 0 0.3 0 0 0</pose>
       <visual name="visual">
@@ -166,7 +216,7 @@
 		<plugin name='laser' filename='libgazebo_ros_ray_sensor.so'>
 
 		<ros>
-		  <namespace>/demo</namespace>
+		  <namespace>/en613</namespace>
 		  <argument>~/out:=scan</argument>
 		</ros>
 		<frame_name>laser_link</frame_name>
@@ -176,38 +226,36 @@
 	      </sensor>
     </link>
     
+    <plugin name='diff_drive' filename='libgazebo_ros_diff_drive.so'>
 
-        
-      <plugin name='diff_drive' filename='libgazebo_ros_diff_drive.so'>
-
-        <ros>
-          <namespace>/demo</namespace>
-          <remapping>cmd_vel:=cmd_vel</remapping>
-          <remapping>odom:=odom</remapping>
-        </ros>
+      <ros>
+        <namespace>/demo</namespace>
+        <remapping>cmd_vel:=cmd_vel</remapping>
+        <remapping>odom:=odom</remapping>
+      </ros>
 
         <!-- wheels -->
-        <left_joint>left_wheel_hinge</left_joint>
-        <right_joint>right_wheel_hinge</right_joint>
+      <left_joint>left_wheel_hinge</left_joint>
+      <right_joint>right_wheel_hinge</right_joint>
 
         <!-- kinematics -->
-        <wheel_separation>0.26</wheel_separation>
-        <wheel_diameter>0.2</wheel_diameter>
+      <wheel_separation>0.26</wheel_separation>
+      <wheel_diameter>0.2</wheel_diameter>
 
         <!-- limits -->
-        <max_wheel_torque>20</max_wheel_torque>
-        <max_wheel_acceleration>1.0</max_wheel_acceleration>
+      <max_wheel_torque>20</max_wheel_torque>
+      <max_wheel_acceleration>1.0</max_wheel_acceleration>
 
         <!-- output -->
-        <publish_odom>true</publish_odom>
-        <publish_odom_tf>true</publish_odom_tf>
-        <publish_wheel_tf>true</publish_wheel_tf>
+      <publish_odom>true</publish_odom>
+      <publish_odom_tf>true</publish_odom_tf>
+      <publish_wheel_tf>true</publish_wheel_tf>
 
-        <odometry_frame>odom</odometry_frame>
-        <robot_base_frame>chassis</robot_base_frame>
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>chassis</robot_base_frame>
 
-        <odometrySource>ENCODER</odometrySource>
-      </plugin>
+      <odometrySource>ENCODER</odometrySource>
+  </plugin>
 <!--
     <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
       <robot_namespace>/demo</robot_namespace>
