@@ -52,8 +52,15 @@ def generate_launch_description():
                         arguments=['BasicBot', 'en613', map_folder],
                         output='screen')
 
-    #localization = Node(package='robot_spawner_pkg', executable='localization',
-    #                    output='screen')
+    localization = Node(package='robot_spawner_pkg', executable='localization',
+                        #arguments=['--ros-args', '--log-level', 'debug'],
+                        parameters=[{'use_sim_time': use_sim_time}],
+                        output='screen')
+
+    mapping = Node(package='robot_spawner_pkg', executable='mapping',
+                   #arguments=['--ros-args', '--log-level', 'debug'],
+                   parameters=[{'use_sim_time': use_sim_time}],
+                   output='screen')
 
     #diffdrive_sim = Node(package='robot_spawner_pkg', executable='diffdrive_sim',
     #                    output='screen')
@@ -62,8 +69,8 @@ def generate_launch_description():
     #                    output='screen')
     
     #planner = Node(package='robot_spawner_pkg', executable='planner',
-    #                    output='screen')
-    #
+    #                   output='screen')
+    
     joint_state_publisher = Node(
         package="joint_state_publisher",
         executable="joint_state_publisher",
@@ -77,7 +84,8 @@ def generate_launch_description():
         tf_helper,
         map_folder_launch_arg,
         spawn_entity,
-        #localization,
+        localization,
+        mapping,
         #diffdrive_sim,
         #diffdrive_pid,
         #planner,

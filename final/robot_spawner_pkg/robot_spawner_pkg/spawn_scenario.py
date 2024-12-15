@@ -149,9 +149,9 @@ def main():
     node.get_logger().info(f'Robot starting pose = {start}')
     node.get_logger().info(f'Goals  = {goal_list}')
 
-    #spawn_map(node, client, map_folder)
+    spawn_map(node, client, map_folder)
     spawn_robot(node, client, start)
-    #spawn_goals(node, client, goal_list)
+    spawn_goals(node, client, goal_list)
 
     node.get_logger().info("Done! Shutting down spawner node.")
     node.destroy_node()

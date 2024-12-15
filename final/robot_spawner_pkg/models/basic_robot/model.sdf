@@ -198,7 +198,7 @@
 		<ray>
 		  <scan>
 		    <horizontal>
-		      <samples>340</samples>
+		      <samples>20</samples>
 		      <resolution>1</resolution>
 		      <min_angle>-2.26889</min_angle>
 		      <max_angle>2.268899</max_angle>
@@ -229,7 +229,7 @@
     <plugin name='diff_drive' filename='libgazebo_ros_diff_drive.so'>
 
       <ros>
-        <namespace>/demo</namespace>
+        <namespace>/en613</namespace>
         <remapping>cmd_vel:=cmd_vel</remapping>
         <remapping>odom:=odom</remapping>
       </ros>
