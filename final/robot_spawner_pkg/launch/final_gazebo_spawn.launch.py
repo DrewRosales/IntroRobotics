@@ -68,8 +68,9 @@ def generate_launch_description():
     #diffdrive_pid = Node(package='robot_spawner_pkg', executable='diffdrive_pid',
     #                    output='screen')
     
-    #planner = Node(package='robot_spawner_pkg', executable='planner',
-    #                   output='screen')
+    planner = Node(package='robot_spawner_pkg', executable='planner',
+                   parameters=[{'use_sim_time': use_sim_time}],
+                   output='screen')
     
     joint_state_publisher = Node(
         package="joint_state_publisher",
@@ -88,6 +89,6 @@ def generate_launch_description():
         mapping,
         #diffdrive_sim,
         #diffdrive_pid,
-        #planner,
+        planner,
         joint_state_publisher
     ])

@@ -50,12 +50,10 @@ class MappingNode(Node):
     def point_callback(self, msg):
         """Handle incoming point data from the laser scan"""
         try:
-            self.get_logger().info("1. Starting point callback")
             
             try:
                 # Get latest transform time first
                 latest_tf_time = self.tf_buffer.get_latest_common_time('odom', 'laser_link')
-                self.get_logger().info(f"2. Latest common transform time: {latest_tf_time.nanoseconds}")
     
                 # Get transforms using this common time
                 chassis_to_odom = self.tf_buffer.lookup_transform(
@@ -64,13 +62,11 @@ class MappingNode(Node):
                     latest_tf_time,
                     timeout=rclpy.duration.Duration(seconds=0.1)
                 )
-                self.get_logger().info("3. Successfully got chassis->odom transform")
                 
                 robot_pos = np.array([
                     chassis_to_odom.transform.translation.x,
                     chassis_to_odom.transform.translation.y
                 ])
-                self.get_logger().info(f"4. Robot position: {robot_pos}")
     
                 # Create a new PointStamped with the common transform time
                 point_stamped = PointStamped()
@@ -78,25 +74,17 @@ class MappingNode(Node):
                 point_stamped.header.stamp = latest_tf_time.to_msg()
                 point_stamped.point = msg.point
     
-                self.get_logger().info("7. Attempting to transform point to odom")
                 point_in_odom = self.tf_buffer.transform(
                     point_stamped,
                     'odom',
                     timeout=rclpy.duration.Duration(seconds=0.1)
                 )
 
-                self.get_logger().info("8. Successfully transformed point")
-
                 point = np.array([
                     point_in_odom.point.x,
                     point_in_odom.point.y
                 ])
 
-                self.get_logger().info(f"9. Point position: {point}")
-                self.get_logger().info(f"Map size: {self.quad_map.size}")
-                self.get_logger().info(f"Map origin: {self.quad_map.origin}")
-                self.get_logger().info(f"Robot world pos: {robot_pos}")
-                self.get_logger().info(f"Point world pos: {point}")
                 
                 map_half_size = self.quad_map.size / 2
                 if (abs(robot_pos[0]) > map_half_size or 
@@ -106,77 +94,28 @@ class MappingNode(Node):
                     self.get_logger().warn("Point or robot position outside map bounds!")
                     return
                 
-                # Calculate grid coordinates
                 resolution = self.quad_map.size / (2 ** self.quad_map.max_depth)
                 robot_grid_x = int((robot_pos[0] - (self.quad_map.origin[0] - self.quad_map.size/2)) / resolution)
                 robot_grid_y = int((robot_pos[1] - (self.quad_map.origin[1] - self.quad_map.size/2)) / resolution)
                 point_grid_x = int((point[0] - (self.quad_map.origin[0] - self.quad_map.size/2)) / resolution)
                 point_grid_y = int((point[1] - (self.quad_map.origin[1] - self.quad_map.size/2)) / resolution)
                 
-                self.get_logger().info(f"Robot grid pos: ({robot_grid_x}, {robot_grid_y})")
-                self.get_logger().info(f"Point grid pos: ({point_grid_x}, {point_grid_y})")
 
-                # Calculate grid coordinates with more precise debug info
                 resolution = self.quad_map.size / (2 ** self.quad_map.max_depth)
                 
-                # Robot grid coordinates
                 robot_x = (robot_pos[0] + self.quad_map.size/2) / resolution
                 robot_y = (robot_pos[1] + self.quad_map.size/2) / resolution
                 
-                # Point grid coordinates
                 point_x = (point[0] + self.quad_map.size/2) / resolution
                 point_y = (point[1] + self.quad_map.size/2) / resolution
     
-                self.get_logger().info(
-                    f"Grid calculation:"
-                    f"\n  Resolution: {resolution}m/cell"
-                    f"\n  Robot raw coords: ({robot_x:.2f}, {robot_y:.2f})"
-                    f"\n  Point raw coords: ({point_x:.2f}, {point_y:.2f})"
-                    f"\n  Robot grid pos: ({int(robot_x)}, {int(robot_y)})"
-                    f"\n  Point grid pos: ({int(point_x)}, {int(point_y)})"
-                )
-    
-    
-                # Debug information about the ray
-                dist = np.linalg.norm(point - robot_pos)
-                self.get_logger().info(f"10. Ray length: {dist}m")
                 
-                if dist > 10.0:  # Add reasonable distance check
-                    self.get_logger().warn(f"Suspicious ray length: {dist}m, skipping update")
-                    return
                 
-                self.get_logger().info(
-                    f"Ray trace:"
-                    f"\n  From: world ({robot_pos[0]:.2f}, {robot_pos[1]:.2f})"
-                    f"\n  To: world ({point[0]:.2f}, {point[1]:.2f})"
-                )
-    
-                # Calculate grid coordinates with explicit steps
-                resolution = self.quad_map.size / (2 ** self.quad_map.max_depth)
-                
-                # Step 1: Translate to positive coordinates
-                robot_translated = robot_pos + np.array([self.quad_map.size/2, self.quad_map.size/2])
-                point_translated = point + np.array([self.quad_map.size/2, self.quad_map.size/2])
-                
-                # Step 2: Convert to grid coordinates
-                robot_grid = robot_translated / resolution
-                point_grid = point_translated / resolution
-                
-                self.get_logger().info(
-                    f"Coordinate transformation steps:"
-                    f"\n  1. Translated robot: ({robot_translated[0]:.2f}, {robot_translated[1]:.2f})"
-                    f"\n  2. Translated point: ({point_translated[0]:.2f}, {point_translated[1]:.2f})"
-                    f"\n  3. Grid robot: ({robot_grid[0]:.2f}, {robot_grid[1]:.2f})"
-                    f"\n  4. Grid point: ({point_grid[0]:.2f}, {point_grid[1]:.2f})"
-                )
-                # Update map with ray tracing
                 self.quad_map.ray_update(
                     origin=robot_pos,
                     endpoint=point
                 )
-                self.get_logger().info("11. Updated quadmap")
                 
-                # Print map stats after update
                 grid_data = self.quad_map.to_occupancygrid()
                 occupied_count = sum(1 for x in grid_data if x == MapType.OCCUPIED)
                 unoccupied_count = sum(1 for x in grid_data if x == MapType.UNOCCUPIED)

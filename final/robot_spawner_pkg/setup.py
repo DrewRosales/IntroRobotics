@@ -35,7 +35,7 @@ setup(
             'lidar_tf_publisher = robot_spawner_pkg.lidar_tf_publisher:main',
             'localization = robot_spawner_pkg.localization:main',
             'mapping = robot_spawner_pkg.mapping:main',
-            #'diffdrive_sim = robot_spawner_pkg.diffdrive_sim:main',
+            'planner = robot_spawner_pkg.planner:main',
         ],
     },
 )
