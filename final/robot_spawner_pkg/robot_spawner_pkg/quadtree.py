@@ -179,8 +179,7 @@ class QuadMap:
         grid = np.full((grid_size, grid_size), MapType.UNKNOWN)
         self.root.recursive_get_grid(grid)
         
-        # Flip vertically to match ROS convention
-        grid = np.flip(grid, axis=0)
+        #grid = np.flip(grid, axis=0)
         
         return grid.flatten().tolist()
 
