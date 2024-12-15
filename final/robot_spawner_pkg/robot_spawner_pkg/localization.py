@@ -50,7 +50,7 @@ class LocalizationNode(Node):
         angle = msg.angle_min
         
         # Process fewer points to avoid overwhelming the system
-        step = 5  # Adjust this value to control point density
+        step = 10  # Adjust this value to control point density
         
         for i, ray in enumerate(msg.ranges):
             if i % step != 0:  # Skip points based on step size

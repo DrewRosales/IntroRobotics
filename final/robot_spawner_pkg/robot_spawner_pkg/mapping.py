@@ -40,7 +40,7 @@ class MappingNode(Node):
         )
         
         # Timer for publishing occupancy grid
-        self.timer = self.create_timer(1.0, self.publish_occupancy_grid)
+        self.timer = self.create_timer(0.01, self.publish_occupancy_grid)
         
         self.get_logger().info(
             f'Mapping Node Started with:'
@@ -53,70 +53,80 @@ class MappingNode(Node):
     def point_callback(self, msg):
         """Handle incoming point data from the laser scan"""
         try:
-            # Get the latest transform from chassis to odom
+            self.get_logger().info("1. Starting point callback")
+            
             try:
-                # First try getting the latest available transform
-                now = rclpy.time.Time()
+                # Get latest transform time first
+                latest_tf_time = self.tf_buffer.get_latest_common_time('odom', 'laser_link')
+                self.get_logger().info(f"2. Latest common transform time: {latest_tf_time.nanoseconds}")
+    
+                # Get transforms using this common time
                 chassis_to_odom = self.tf_buffer.lookup_transform(
                     'odom',
                     'chassis',
-                    rclpy.time.Time(),  # get latest transform
-                    timeout=rclpy.duration.Duration(seconds=1.0)
+                    latest_tf_time,
+                    timeout=rclpy.duration.Duration(seconds=0.1)
                 )
+                self.get_logger().info("3. Successfully got chassis->odom transform")
                 
-                self.get_logger().debug(
-                    f'Got transform at time: {chassis_to_odom.header.stamp.sec}.{chassis_to_odom.header.stamp.nanosec}'
-                )
-                
-            except (LookupException, ConnectivityException, ExtrapolationException) as ex:
-                self.get_logger().warning(f'Could not transform chassis to odom: {str(ex)}')
-                return
+                robot_pos = np.array([
+                    chassis_to_odom.transform.translation.x,
+                    chassis_to_odom.transform.translation.y
+                ])
+                self.get_logger().info(f"4. Robot position: {robot_pos}")
     
-            # Get robot position from chassis transform
-            robot_pos = np.array([
-                chassis_to_odom.transform.translation.x,
-                chassis_to_odom.transform.translation.y
-            ])
+                # Create a new PointStamped with the common transform time
+                point_stamped = PointStamped()
+                point_stamped.header.frame_id = msg.header.frame_id
+                point_stamped.header.stamp = latest_tf_time.to_msg()
+                point_stamped.point = msg.point
     
-            # Create point message in laser frame
-            point_stamped = PointStamped()
-            point_stamped.header.stamp = chassis_to_odom.header.stamp  # Use the transform's timestamp
-            point_stamped.header.frame_id = msg.header.frame_id
-            point_stamped.point = msg.point
-    
-            # Transform point to odom frame
-            try:
+                self.get_logger().info("7. Attempting to transform point to odom")
                 point_in_odom = self.tf_buffer.transform(
                     point_stamped,
                     'odom',
-                    timeout=rclpy.duration.Duration(seconds=1.0)
+                    timeout=rclpy.duration.Duration(seconds=0.1)
                 )
+                self.get_logger().info("8. Successfully transformed point")
+    
+                point = np.array([
+                    point_in_odom.point.x,
+                    point_in_odom.point.y
+                ])
+                self.get_logger().info(f"9. Point position: {point}")
+    
+                # Debug information about the ray
+                dist = np.linalg.norm(point - robot_pos)
+                self.get_logger().info(f"10. Ray length: {dist}m")
                 
+                if dist > 10.0:  # Add reasonable distance check
+                    self.get_logger().warn(f"Suspicious ray length: {dist}m, skipping update")
+                    return
+                
+                # Update map with ray tracing
+                self.quad_map.ray_update(
+                    origin=robot_pos,
+                    endpoint=point
+                )
+                self.get_logger().info("11. Updated quadmap")
+                
+                # Print map stats after update
+                grid_data = self.quad_map.to_occupancygrid()
+                occupied_count = sum(1 for x in grid_data if x == MapType.OCCUPIED)
+                unoccupied_count = sum(1 for x in grid_data if x == MapType.UNOCCUPIED)
+                unknown_count = sum(1 for x in grid_data if x != MapType.OCCUPIED and x != MapType.UNOCCUPIED)
                 self.get_logger().info(
-                    f'Successfully transformed point using timestamp: '
-                    f'{point_stamped.header.stamp.sec}.{point_stamped.header.stamp.nanosec}'
+                    f"12. Map stats - Occupied: {occupied_count}, "
+                    f"Unoccupied: {unoccupied_count}, Unknown: {unknown_count}"
                 )
                 
-            except (LookupException, ConnectivityException, ExtrapolationException) as ex:
-                self.get_logger().warning(f'Could not transform point to odom: {str(ex)}')
+            except Exception as ex:
+                self.get_logger().error(f"Transform or update failed: {str(ex)}")
                 return
-    
-            # Extract point coordinates for map update
-            point = np.array([
-                point_in_odom.point.x,
-                point_in_odom.point.y
-            ])
-    
-            # Update map with ray tracing
-            self.quad_map.ray_update(
-                origin=robot_pos,
-                endpoint=point
-            )
-            
+                
         except Exception as ex:
             self.get_logger().error(f'Error in point_callback: {str(ex)}')
             self.get_logger().error(f'Exception type: {type(ex)}')
-        
     def publish_occupancy_grid(self):
         """Convert QuadMap to OccupancyGrid message and publish"""
         try:
