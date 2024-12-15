@@ -82,33 +82,21 @@ def create_path_grid(cost_to_come, current):
 def heuristic(a, b):
     return np.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
 
-def a_star_grid(map: np.ndarray, start:Tuple[int, int], goal: Tuple[int, int]) -> List[Tuple[int, int]]:
+def a_star_grid(map: np.ndarray, start: tuple, goal: tuple) -> List[tuple]:
     """
-    This function will compute the optimal path between a start point and an end point given a grid-based
-    map. It is up to the student to implement the heuristic function and cost function. Assume a cell's 
-    indices represent it's position in cartesian space. (e.g. cells [1,3] and [1,5] are 2 units apart). 
-
-    If no path exists then this function should return an empty list.
-
-    Worth 50 pts
+    A* implementation for grid-based maps
+    map: numpy array where values < 50 are free space (ROS convention)
+    """
+    height, width = map.shape  # Note: occupancy grid is row-major
     
-    Input
-      :param map: An np.ndarray representing free space and occupied space
-      :param start: A tuple of indicies indicating the starting cell of the search
-      :param goal: A tuple of indicies indicating the goal cell of the search
-
-    Output
-      :return: path: a list of Tuples indicating the indicies of the cells that make up the path with 
-                    the starting cell as the first element of the list and the ending cell as the last
-                    element in the list
-    """
+    def is_valid(x, y):
+        return (0 <= x < width and 0 <= y < height and map[y, x] < 50)
+    
     open_set = []
     heappush(open_set, (0, start))
     cost_to_come = {}
     g = {start: 0}
     f = {start: heuristic(start, goal)}
-
-    m, n = map.shape
 
     while open_set:
         _, current = heappop(open_set)
@@ -116,30 +104,25 @@ def a_star_grid(map: np.ndarray, start:Tuple[int, int], goal: Tuple[int, int]) -
         if current == goal:
             return create_path_grid(cost_to_come, current)
 
-        neighbors = []
-        for i, j in [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (1, 1), (-1, 1), (1, -1)]:
-            neighbor = (current[0] + i, current[1] + j)
+        # Check 8-connected grid
+        for dx, dy in [(-1,0), (1,0), (0,-1), (0,1), 
+                      (-1,-1), (1,1), (-1,1), (1,-1)]:
+            next_x = current[0] + dx
+            next_y = current[1] + dy
+            neighbor = (next_x, next_y)
+            
+            if not is_valid(next_x, next_y):
+                continue
 
-            if 0 <= neighbor[0] < m and 0 <= neighbor[1] < n and map[neighbor] == 0:
-                neighbors.append(neighbor)
-
-        for neighbor in neighbors:
-            if 0 <= neighbor[0] < m and 0 <= neighbor[1] < n and map[neighbor] == 0:
-
-                cost_to_go = 0
-
-                if abs(neighbor[0] - current[0]) + abs(neighbor[1] - current[1]) == 1:
-                    cost_to_go = 1
-                else:
-                    cost_to_go = np.sqrt(2)
-
-                tentative_g_score = g[current] + cost_to_go
-                
-                if neighbor not in g or tentative_g_score < g[neighbor]:
-                    cost_to_come[neighbor] = current
-                    g[neighbor] = tentative_g_score
-                    f[neighbor] = tentative_g_score + heuristic(neighbor, goal)
-                    heappush(open_set, (f[neighbor], neighbor))
+            # Use correct cost for diagonal vs straight moves
+            cost = np.sqrt(2) if abs(dx) + abs(dy) == 2 else 1
+            tentative_g = g[current] + cost
+            
+            if neighbor not in g or tentative_g < g[neighbor]:
+                cost_to_come[neighbor] = current
+                g[neighbor] = tentative_g
+                f[neighbor] = tentative_g + heuristic(neighbor, goal)
+                heappush(open_set, (f[neighbor], neighbor))
     
     return []
 

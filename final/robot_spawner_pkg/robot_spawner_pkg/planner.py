@@ -1,17 +1,21 @@
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import OccupancyGrid, Path
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, PoseArray, Transform
+from tf2_ros import TransformException, Buffer, TransformListener
 import numpy as np
 from typing import Tuple, List
-
 from . import a_star_planner
 
 class PathPlannerNode(Node):
     def __init__(self):
         super().__init__('path_planner')
         
-        # Initialize subscribers
+        # Transform setup
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+        
+        # Subscribers
         self.map_sub = self.create_subscription(
             OccupancyGrid,
             '/en613/occupancy_grid',
@@ -19,7 +23,14 @@ class PathPlannerNode(Node):
             10
         )
         
-        # Initialize publishers
+        self.goal_sub = self.create_subscription(
+            PoseArray,
+            '/en613/goals',
+            self.goal_callback,
+            10
+        )
+        
+        # Publishers
         self.path_pub = self.create_publisher(
             Path,
             '/en613/path',
@@ -33,22 +44,51 @@ class PathPlannerNode(Node):
         self.width = None
         self.height = None
         
+        # Goal management
+        self.current_goals = []
+        self.current_goal_index = 0
+        
         self.get_logger().info('Path Planner Node Started')
     
-    def world_to_grid(self, world_point: Tuple[float, float]) -> Tuple[int, int]:
+    def get_robot_position(self) -> tuple:
+        """Get current robot position from transform"""
+        try:
+            transform = self.tf_buffer.lookup_transform(
+                'odom',
+                'chassis',
+                rclpy.time.Time()
+            )
+            return (transform.transform.translation.x, 
+                   transform.transform.translation.y)
+        except TransformException as ex:
+            self.get_logger().warning(f'Could not get robot position: {ex}')
+            return None
+    
+    def world_to_grid(self, world_point: tuple) -> tuple:
         """Convert world coordinates to grid cell indices"""
+        # Origin is at (-6, -6) for a 12x12 map
+        # Need to shift coordinates to positive space first
         grid_x = int((world_point[0] - self.origin.x) / self.resolution)
         grid_y = int((world_point[1] - self.origin.y) / self.resolution)
+    
+        self.get_logger().debug(
+            f"World to grid conversion:"
+            f"\n  World: {world_point}"
+            f"\n  Origin: ({self.origin.x}, {self.origin.y})"
+            f"\n  Resolution: {self.resolution}"
+            f"\n  Calculation: x=({world_point[0]} - ({self.origin.x}))/{self.resolution}"
+            f"\n  Grid: ({grid_x}, {grid_y})"
+        )
+    
         return (grid_x, grid_y)
     
-    def grid_to_world(self, grid_point: Tuple[int, int]) -> Tuple[float, float]:
+    def grid_to_world(self, grid_point: tuple) -> tuple:
         """Convert grid cell indices to world coordinates"""
         world_x = grid_point[0] * self.resolution + self.origin.x
         world_y = grid_point[1] * self.resolution + self.origin.y
         return (world_x, world_y)
     
-    def plan_path(self, start_world: Tuple[float, float], 
-                 goal_world: Tuple[float, float]) -> Path:
+    def plan_path(self, start_world: tuple, goal_world: tuple) -> Path:
         """Plan path using A* from start to goal in world coordinates"""
         if self.map_data is None:
             self.get_logger().warn('No map data available')
@@ -72,7 +112,7 @@ class PathPlannerNode(Node):
         occupancy_grid = np.array(self.map_data).reshape((self.height, self.width))
         
         # Run A* search
-        grid_path = a_star_planner.a_star_search(start_grid, goal_grid, occupancy_grid)
+        grid_path = a_star_planner.a_star_grid(occupancy_grid, start_grid, goal_grid)
         
         if not grid_path:
             self.get_logger().warn('No path found')
@@ -94,6 +134,48 @@ class PathPlannerNode(Node):
             path_msg.poses.append(pose)
         
         return path_msg
+    
+    def goal_callback(self, msg: PoseArray):
+        """Handle new goal messages"""
+        if not msg.poses or self.map_data is None:
+            return
+            
+        # Store new goals
+        self.current_goals = [(pose.position.x, pose.position.y) 
+                            for pose in msg.poses]
+        self.current_goal_index = 0
+        
+        self.get_logger().info(f'Received {len(self.current_goals)} goals')
+        self.plan_to_next_goal()
+    
+    def plan_to_next_goal(self):
+        self.get_logger().info("PLAN TO NEXT GOAL")
+        """Plan path to the next goal in sequence"""
+        if self.current_goal_index >= len(self.current_goals):
+            self.get_logger().info('All goals reached')
+            return
+        
+        robot_pos = self.get_robot_position()
+        if robot_pos is None:
+            return
+        
+        current_goal = self.current_goals[self.current_goal_index]
+        self.get_logger().info(
+            f'Planning to goal {self.current_goal_index + 1}/{len(self.current_goals)}: '
+            f'{current_goal}'
+        )
+        
+        path = self.plan_path(robot_pos, current_goal)
+        if path:
+            self.path_pub.publish(path)
+            self.get_logger().info('Published path to current goal')
+            self.current_goal_index += 1
+            
+            # Plan to next goal if available
+            if self.current_goal_index < len(self.current_goals):
+                self.plan_to_next_goal()
+        else:
+            self.get_logger().warn('Failed to plan path to current goal')
     
     def map_callback(self, msg: OccupancyGrid):
         """Handle incoming occupancy grid updates"""

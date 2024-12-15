@@ -16,7 +16,7 @@ class MappingNode(Node):
         self.tf_listener = TransformListener(self.tf_buffer, self)
         
         self.quad_map = QuadMap(
-            max_depth=6,
+            max_depth=7,
             size=12.0,
             origin=np.array([0.0, 0.0])
         )
@@ -40,11 +40,7 @@ class MappingNode(Node):
         self.timer = self.create_timer(0.01, self.publish_occupancy_grid)
         
         self.get_logger().info(
-            f'Mapping Node Started with:'
-            f'\n  Map Size: {self.quad_map.size}m x {self.quad_map.size}m'
-            f'\n  Resolution: {self.quad_map.size / (2 ** 6)}m'
-            f'\n  Coverage: ({-self.quad_map.size/2}, {-self.quad_map.size/2}) to '
-            f'({self.quad_map.size/2}, {self.quad_map.size/2})'
+            'Mapping Node Started '
         )
 
     def point_callback(self, msg):
@@ -114,15 +110,6 @@ class MappingNode(Node):
                 self.quad_map.ray_update(
                     origin=robot_pos,
                     endpoint=point
-                )
-                
-                grid_data = self.quad_map.to_occupancygrid()
-                occupied_count = sum(1 for x in grid_data if x == MapType.OCCUPIED)
-                unoccupied_count = sum(1 for x in grid_data if x == MapType.UNOCCUPIED)
-                unknown_count = sum(1 for x in grid_data if x != MapType.OCCUPIED and x != MapType.UNOCCUPIED)
-                self.get_logger().info(
-                    f"12. Map stats - Occupied: {occupied_count}, "
-                    f"Unoccupied: {unoccupied_count}, Unknown: {unknown_count}"
                 )
                 
             except Exception as ex:
