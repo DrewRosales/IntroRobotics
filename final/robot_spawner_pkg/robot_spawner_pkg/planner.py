@@ -73,25 +73,31 @@ class PathPlannerNode(Node):
         inflated_grid = inflated_grid * 100
         
         return inflated_grid
-    
+
     def check_progress(self):
-        """Periodically check distance to current goal"""
-        if not self.executing_path or self.current_goal_index >= len(self.current_goals):
-            return
-            
-        robot_pos = self.get_robot_position()
-        if robot_pos is None:
-            return
-            
-        current_goal = self.current_goals[self.current_goal_index]
-        distance = np.sqrt((robot_pos[0] - current_goal[0])**2 + 
-                          (robot_pos[1] - current_goal[1])**2)
-        
-        if distance <= self.GOAL_TOLERANCE:
-            self.get_logger().info(f'Reached goal {self.current_goal_index + 1}')
-            self.executing_path = False
-            self.current_goal_index += 1
-            self.plan_to_next_goal()
+       """Periodically check distance to current goal and replan if needed"""
+       if not self.executing_path or self.current_goal_index >= len(self.current_goals):
+           return
+               
+       robot_pos = self.get_robot_position()
+       if robot_pos is None:
+           return
+               
+       current_goal = self.current_goals[self.current_goal_index]
+       distance = np.sqrt((robot_pos[0] - current_goal[0])**2 + 
+                         (robot_pos[1] - current_goal[1])**2)
+       
+       # If we've reached the goal
+       if distance <= self.GOAL_TOLERANCE:
+           self.get_logger().info(f'Reached goal {self.current_goal_index + 1}')
+           self.executing_path = False
+           self.current_goal_index += 1
+           self.plan_to_next_goal()
+       # Replan if we're too far from goal and not making progress
+       elif distance > self.GOAL_TOLERANCE * 2:  # Adjust this threshold as needed
+           self.get_logger().info('Replanning path to current goal')
+           self.executing_path = False  # Allow replanning
+           self.plan_to_next_goal()   
     
     def get_robot_position(self) -> tuple:
         """Get current robot position from transform"""
@@ -165,6 +171,13 @@ class PathPlannerNode(Node):
         path_msg = Path()
         path_msg.header.frame_id = 'odom'
         path_msg.header.stamp = self.get_clock().now().to_msg()
+
+        if grid_path:
+            # Add debugging info
+            self.get_logger().info(f'Found path with {len(grid_path)} points')
+            path_msg = Path()
+            path_msg.header.frame_id = 'odom'  # Verify this matches your visualization frame
+            path_msg.header.stamp = self.get_clock().now().to_msg()
         
         for grid_point in grid_path:
             world_point = self.grid_to_world(grid_point)
@@ -176,6 +189,8 @@ class PathPlannerNode(Node):
             pose.pose.orientation.w = 1.0
             path_msg.poses.append(pose)
         
+        self.get_logger().info(f'Created path message with {len(path_msg.poses)} poses')
+
         return path_msg
     
     def goal_callback(self, msg: PoseArray):
@@ -184,15 +199,19 @@ class PathPlannerNode(Node):
             return
             
         # Reset goals and status
-        self.current_goals = [(pose.position.x, pose.position.y) 
-                            for pose in msg.poses]
-        self.current_goal_index = 0
-        self.executing_path = False
-        
-        self.get_logger().info(f'Received {len(self.current_goals)} goals')
-        self.plan_to_next_goal()
+        if not self.current_goals:
+            self.current_goals = [(pose.position.x, pose.position.y) 
+                                    for pose in msg.poses]
+            self.current_goal_index = 0
+            self.executing_path = False
+            
+            self.get_logger().info(f'Received {len(self.current_goals)} goals')
+
+            if self.map_data is not None:
+                self.plan_to_next_goal()
     
     def plan_to_next_goal(self):
+        self.get_logger().info('Plan to next GOAL!!!!!!!!!!!!!!!!!1')
         """Plan path to the next goal in sequence"""
         if self.current_goal_index >= len(self.current_goals):
             self.get_logger().info('All goals reached')
@@ -227,10 +246,6 @@ class PathPlannerNode(Node):
         self.width = msg.info.width
         self.height = msg.info.height
         
-        self.get_logger().info(
-            f'Received map update: {self.width}x{self.height} cells, '
-            f'resolution: {self.resolution}m'
-        )
 
 def main(args=None):
     rclpy.init(args=args)
