@@ -6,18 +6,15 @@ from tf2_ros import TransformListener, Buffer, TransformException, LookupExcepti
 import tf2_geometry_msgs
 import numpy as np
 from robot_spawner_pkg.quadtree import QuadMap, MapType
+from rclpy.duration import Duration
 
 class MappingNode(Node):
     def __init__(self):
         super().__init__('mapping_node')
-
-        # Initialize transform buffer and listener
-        self.tf_buffer = Buffer()
+        
+        self.tf_buffer = Buffer(Duration(seconds=10.0))
         self.tf_listener = TransformListener(self.tf_buffer, self)
         
-        # Initialize QuadMap
-        # Size of 12.0 ensures coverage of all possible maze configurations
-        # Origin at (0,0) matches Gazebo spawn point
         self.quad_map = QuadMap(
             max_depth=6,
             size=12.0,
@@ -87,13 +84,58 @@ class MappingNode(Node):
                     'odom',
                     timeout=rclpy.duration.Duration(seconds=0.1)
                 )
+
                 self.get_logger().info("8. Successfully transformed point")
-    
+
                 point = np.array([
                     point_in_odom.point.x,
                     point_in_odom.point.y
                 ])
+
                 self.get_logger().info(f"9. Point position: {point}")
+                self.get_logger().info(f"Map size: {self.quad_map.size}")
+                self.get_logger().info(f"Map origin: {self.quad_map.origin}")
+                self.get_logger().info(f"Robot world pos: {robot_pos}")
+                self.get_logger().info(f"Point world pos: {point}")
+                
+                map_half_size = self.quad_map.size / 2
+                if (abs(robot_pos[0]) > map_half_size or 
+                    abs(robot_pos[1]) > map_half_size or
+                    abs(point[0]) > map_half_size or
+                    abs(point[1]) > map_half_size):
+                    self.get_logger().warn("Point or robot position outside map bounds!")
+                    return
+                
+                # Calculate grid coordinates
+                resolution = self.quad_map.size / (2 ** self.quad_map.max_depth)
+                robot_grid_x = int((robot_pos[0] - (self.quad_map.origin[0] - self.quad_map.size/2)) / resolution)
+                robot_grid_y = int((robot_pos[1] - (self.quad_map.origin[1] - self.quad_map.size/2)) / resolution)
+                point_grid_x = int((point[0] - (self.quad_map.origin[0] - self.quad_map.size/2)) / resolution)
+                point_grid_y = int((point[1] - (self.quad_map.origin[1] - self.quad_map.size/2)) / resolution)
+                
+                self.get_logger().info(f"Robot grid pos: ({robot_grid_x}, {robot_grid_y})")
+                self.get_logger().info(f"Point grid pos: ({point_grid_x}, {point_grid_y})")
+
+                # Calculate grid coordinates with more precise debug info
+                resolution = self.quad_map.size / (2 ** self.quad_map.max_depth)
+                
+                # Robot grid coordinates
+                robot_x = (robot_pos[0] + self.quad_map.size/2) / resolution
+                robot_y = (robot_pos[1] + self.quad_map.size/2) / resolution
+                
+                # Point grid coordinates
+                point_x = (point[0] + self.quad_map.size/2) / resolution
+                point_y = (point[1] + self.quad_map.size/2) / resolution
+    
+                self.get_logger().info(
+                    f"Grid calculation:"
+                    f"\n  Resolution: {resolution}m/cell"
+                    f"\n  Robot raw coords: ({robot_x:.2f}, {robot_y:.2f})"
+                    f"\n  Point raw coords: ({point_x:.2f}, {point_y:.2f})"
+                    f"\n  Robot grid pos: ({int(robot_x)}, {int(robot_y)})"
+                    f"\n  Point grid pos: ({int(point_x)}, {int(point_y)})"
+                )
+    
     
                 # Debug information about the ray
                 dist = np.linalg.norm(point - robot_pos)
@@ -103,6 +145,30 @@ class MappingNode(Node):
                     self.get_logger().warn(f"Suspicious ray length: {dist}m, skipping update")
                     return
                 
+                self.get_logger().info(
+                    f"Ray trace:"
+                    f"\n  From: world ({robot_pos[0]:.2f}, {robot_pos[1]:.2f})"
+                    f"\n  To: world ({point[0]:.2f}, {point[1]:.2f})"
+                )
+    
+                # Calculate grid coordinates with explicit steps
+                resolution = self.quad_map.size / (2 ** self.quad_map.max_depth)
+                
+                # Step 1: Translate to positive coordinates
+                robot_translated = robot_pos + np.array([self.quad_map.size/2, self.quad_map.size/2])
+                point_translated = point + np.array([self.quad_map.size/2, self.quad_map.size/2])
+                
+                # Step 2: Convert to grid coordinates
+                robot_grid = robot_translated / resolution
+                point_grid = point_translated / resolution
+                
+                self.get_logger().info(
+                    f"Coordinate transformation steps:"
+                    f"\n  1. Translated robot: ({robot_translated[0]:.2f}, {robot_translated[1]:.2f})"
+                    f"\n  2. Translated point: ({point_translated[0]:.2f}, {point_translated[1]:.2f})"
+                    f"\n  3. Grid robot: ({robot_grid[0]:.2f}, {robot_grid[1]:.2f})"
+                    f"\n  4. Grid point: ({point_grid[0]:.2f}, {point_grid[1]:.2f})"
+                )
                 # Update map with ray tracing
                 self.quad_map.ray_update(
                     origin=robot_pos,
@@ -127,21 +193,17 @@ class MappingNode(Node):
         except Exception as ex:
             self.get_logger().error(f'Error in point_callback: {str(ex)}')
             self.get_logger().error(f'Exception type: {type(ex)}')
+
     def publish_occupancy_grid(self):
-        """Convert QuadMap to OccupancyGrid message and publish"""
         try:
             msg = OccupancyGrid()
-            
-            # Set header
             msg.header.stamp = self.get_clock().now().to_msg()
             msg.header.frame_id = "odom"
             
-            # Set metadata
             msg.info.resolution = self.quad_map.size / (2 ** self.quad_map.max_depth)
             msg.info.width = 2 ** self.quad_map.max_depth
             msg.info.height = 2 ** self.quad_map.max_depth
             
-            # Set origin (bottom-left corner of the grid)
             msg.info.origin.position.x = -self.quad_map.size/2
             msg.info.origin.position.y = -self.quad_map.size/2
             msg.info.origin.position.z = 0.0
@@ -153,7 +215,6 @@ class MappingNode(Node):
                        (0 if x == MapType.UNOCCUPIED else -1) 
                        for x in grid_data]
             
-            # Publish the message
             self.occupancy_publisher.publish(msg)
             
         except Exception as ex:
