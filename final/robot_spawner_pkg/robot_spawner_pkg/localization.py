@@ -70,13 +70,13 @@ class LocalizationNode(Node):
                 f'- Range max: {msg.range_max:.2f}'
             )
         
-        step = 2  # Adjust this value to control point density
+        #step = 2  # Adjust this value to control point density
         
         for i, ray in enumerate(msg.ranges):
-            if i % step != 0:
-                self.points_skipped += 1
-                angle += msg.angle_increment
-                continue
+            #if i % step != 0:
+            #    self.points_skipped += 1
+            #    angle += msg.angle_increment
+            #    continue
                 
             if msg.range_min <= ray <= msg.range_max:
                 x = ray * np.cos(angle)

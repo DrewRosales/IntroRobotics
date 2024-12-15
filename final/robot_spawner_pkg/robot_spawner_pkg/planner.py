@@ -5,17 +5,16 @@ from geometry_msgs.msg import PoseStamped, PoseArray, Transform
 from tf2_ros import TransformException, Buffer, TransformListener
 import numpy as np
 from typing import Tuple, List
+import cv2
 from . import a_star_planner
 
 class PathPlannerNode(Node):
     def __init__(self):
         super().__init__('path_planner')
         
-        # Transform setup
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         
-        # Subscribers
         self.map_sub = self.create_subscription(
             OccupancyGrid,
             '/en613/occupancy_grid',
@@ -47,8 +46,52 @@ class PathPlannerNode(Node):
         # Goal management
         self.current_goals = []
         self.current_goal_index = 0
+        self.executing_path = False
+        
+        # Robot parameters
+        self.ROBOT_RADIUS = 0.3  # meters
+        self.GOAL_TOLERANCE = 0.5  # meters
+        
+        # Progress checking timer
+        self.progress_timer = self.create_timer(0.1, self.check_progress)
         
         self.get_logger().info('Path Planner Node Started')
+    
+    def inflate_grid(self, grid: np.ndarray) -> np.ndarray:
+        """Inflate obstacles in the grid by robot radius"""
+        # Convert to binary grid (0 for free, 1 for occupied)
+        binary_grid = (grid >= 50).astype(np.uint8)
+        
+        # Calculate kernel size based on robot radius
+        kernel_size = int(np.ceil(self.ROBOT_RADIUS / self.resolution))
+        kernel = np.ones((kernel_size * 2 + 1, kernel_size * 2 + 1), np.uint8)
+        
+        # Dilate obstacles
+        inflated_grid = cv2.dilate(binary_grid, kernel, iterations=1)
+        
+        # Convert back to occupancy grid format
+        inflated_grid = inflated_grid * 100
+        
+        return inflated_grid
+    
+    def check_progress(self):
+        """Periodically check distance to current goal"""
+        if not self.executing_path or self.current_goal_index >= len(self.current_goals):
+            return
+            
+        robot_pos = self.get_robot_position()
+        if robot_pos is None:
+            return
+            
+        current_goal = self.current_goals[self.current_goal_index]
+        distance = np.sqrt((robot_pos[0] - current_goal[0])**2 + 
+                          (robot_pos[1] - current_goal[1])**2)
+        
+        if distance <= self.GOAL_TOLERANCE:
+            self.get_logger().info(f'Reached goal {self.current_goal_index + 1}')
+            self.executing_path = False
+            self.current_goal_index += 1
+            self.plan_to_next_goal()
     
     def get_robot_position(self) -> tuple:
         """Get current robot position from transform"""
@@ -66,20 +109,17 @@ class PathPlannerNode(Node):
     
     def world_to_grid(self, world_point: tuple) -> tuple:
         """Convert world coordinates to grid cell indices"""
-        # Origin is at (-6, -6) for a 12x12 map
-        # Need to shift coordinates to positive space first
         grid_x = int((world_point[0] - self.origin.x) / self.resolution)
         grid_y = int((world_point[1] - self.origin.y) / self.resolution)
-    
+        
         self.get_logger().debug(
             f"World to grid conversion:"
             f"\n  World: {world_point}"
             f"\n  Origin: ({self.origin.x}, {self.origin.y})"
             f"\n  Resolution: {self.resolution}"
-            f"\n  Calculation: x=({world_point[0]} - ({self.origin.x}))/{self.resolution}"
             f"\n  Grid: ({grid_x}, {grid_y})"
         )
-    
+        
         return (grid_x, grid_y)
     
     def grid_to_world(self, grid_point: tuple) -> tuple:
@@ -111,8 +151,11 @@ class PathPlannerNode(Node):
         # Reshape map data into 2D array
         occupancy_grid = np.array(self.map_data).reshape((self.height, self.width))
         
+        # Inflate grid for robot size
+        inflated_grid = self.inflate_grid(occupancy_grid)
+        
         # Run A* search
-        grid_path = a_star_planner.a_star_grid(occupancy_grid, start_grid, goal_grid)
+        grid_path = a_star_planner.a_star_grid(inflated_grid, start_grid, goal_grid)
         
         if not grid_path:
             self.get_logger().warn('No path found')
@@ -140,25 +183,28 @@ class PathPlannerNode(Node):
         if not msg.poses or self.map_data is None:
             return
             
-        # Store new goals
+        # Reset goals and status
         self.current_goals = [(pose.position.x, pose.position.y) 
                             for pose in msg.poses]
         self.current_goal_index = 0
+        self.executing_path = False
         
         self.get_logger().info(f'Received {len(self.current_goals)} goals')
         self.plan_to_next_goal()
     
     def plan_to_next_goal(self):
-        self.get_logger().info("PLAN TO NEXT GOAL")
         """Plan path to the next goal in sequence"""
         if self.current_goal_index >= len(self.current_goals):
             self.get_logger().info('All goals reached')
             return
-        
+            
+        if self.executing_path:
+            return  # Don't plan new path while executing current one
+            
         robot_pos = self.get_robot_position()
         if robot_pos is None:
             return
-        
+            
         current_goal = self.current_goals[self.current_goal_index]
         self.get_logger().info(
             f'Planning to goal {self.current_goal_index + 1}/{len(self.current_goals)}: '
@@ -169,11 +215,7 @@ class PathPlannerNode(Node):
         if path:
             self.path_pub.publish(path)
             self.get_logger().info('Published path to current goal')
-            self.current_goal_index += 1
-            
-            # Plan to next goal if available
-            if self.current_goal_index < len(self.current_goals):
-                self.plan_to_next_goal()
+            self.executing_path = True
         else:
             self.get_logger().warn('Failed to plan path to current goal')
     

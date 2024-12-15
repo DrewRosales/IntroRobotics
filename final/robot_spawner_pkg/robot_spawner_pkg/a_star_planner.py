@@ -5,6 +5,7 @@ import numpy as np
 from typing import List, Tuple
 
 from heapq import heappush, heappop
+import cv2
 
 
 class Edge: 
@@ -82,11 +83,24 @@ def create_path_grid(cost_to_come, current):
 def heuristic(a, b):
     return np.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
 
+def inflate_grid(grid: np.ndarray, robot_radius: float, resolution: float) -> np.ndarray:
+
+    # Convert to binary grid (0 for free, 1 for occupied)
+    binary_grid = (grid >= 50).astype(np.uint8)
+    
+    # Calculate kernel size based on robot radius
+    kernel_size = int(np.ceil(robot_radius / resolution))
+    kernel = np.ones((kernel_size * 2 + 1, kernel_size * 2 + 1), np.uint8)
+    
+    # Dilate obstacles
+    inflated_grid = cv2.dilate(binary_grid, kernel, iterations=1)
+    
+    # Convert back to occupancy grid format
+    inflated_grid = inflated_grid * 100
+    
+    return inflated_grid
+
 def a_star_grid(map: np.ndarray, start: tuple, goal: tuple) -> List[tuple]:
-    """
-    A* implementation for grid-based maps
-    map: numpy array where values < 50 are free space (ROS convention)
-    """
     height, width = map.shape  # Note: occupancy grid is row-major
     
     def is_valid(x, y):
@@ -125,15 +139,6 @@ def a_star_grid(map: np.ndarray, start: tuple, goal: tuple) -> List[tuple]:
                 heappush(open_set, (f[neighbor], neighbor))
     
     return []
-
-def create_graph_path(goal : Node):
-    path = []
-    current = goal
-    while current:
-        path.append(current)
-        current = current.previous
-        path.reverse()
-    return path
 
 def a_star_graph(start: Node, goal: Node) -> List[Node]:
     """
