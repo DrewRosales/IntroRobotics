@@ -4,9 +4,8 @@ from nav_msgs.msg import OccupancyGrid, Path
 from geometry_msgs.msg import PoseStamped, PoseArray, Transform
 from tf2_ros import TransformException, Buffer, TransformListener
 import numpy as np
-from typing import Tuple, List, Set
+from typing import Tuple, List
 import cv2
-from collections import deque
 from . import a_star_planner
 
 class PathPlannerNode(Node):
@@ -44,10 +43,11 @@ class PathPlannerNode(Node):
         self.width = None
         self.height = None
         
-        # Dual deque goal management
-        self.received_goals = deque()  # Continuously updated from topic
-        self.planning_goals = deque()  # Used by planner
-        self.current_goal = None  # Track current goal being executed
+        # Goal management
+        self.received_goals = []  # All goals from topic
+        self.planning_goals = []  # Goals for planning
+        self.goal_index = 0     # Current goal index
+        self.current_goal = None  # Active goal being pursued
         
         # Robot parameters
         self.ROBOT_RADIUS = 0.3  # meters
@@ -56,9 +56,8 @@ class PathPlannerNode(Node):
         # Debug flags
         self.debug = True
         
-        # Timers
+        # Progress checking timer
         self.progress_timer = self.create_timer(0.1, self.check_progress)
-        self.goal_check_timer = self.create_timer(1.0, self.update_planning_goals)
         
         self.get_logger().info('Path Planner Node Started')
     
@@ -68,8 +67,8 @@ class PathPlannerNode(Node):
             self.get_logger().info(
                 f"[{context}] State:"
                 f"\n  Current Goal: {self.current_goal}"
-                f"\n  Planning Goals: {len(self.planning_goals)}"
-                f"\n  Received Goals: {len(self.received_goals)}"
+                f"\n  Goal Index: {self.goal_index}/{len(self.planning_goals)}"
+                f"\n  Total Goals: {len(self.received_goals)}"
             )
 
     def inflate_grid(self, grid: np.ndarray) -> np.ndarray:
@@ -89,29 +88,6 @@ class PathPlannerNode(Node):
         
         return inflated_grid
     
-    def update_planning_goals(self):
-        """Check for new goals and update planning deque"""
-        if not self.received_goals:
-            return
-            
-        # Convert deques to sets for comparison
-        received_set = set(self.received_goals)
-        planning_set = set(self.planning_goals)
-        
-        # Find new goals
-        new_goals = received_set - planning_set
-        
-        if new_goals:
-            # Add new goals to planning deque in original order
-            for goal in sorted(new_goals, key=lambda x: self.received_goals.index(x)):
-                self.planning_goals.append(goal)
-            
-            self.get_logger().info(
-                f'Added {len(new_goals)} new goals to planning queue. '
-                f'Total planning goals: {len(self.planning_goals)}'
-            )
-            self.debug_log_state("Goal Update")
-    
     def check_progress(self):
         """Periodically check distance to current goal"""
         if not self.current_goal:
@@ -127,17 +103,14 @@ class PathPlannerNode(Node):
         self.get_logger().debug(f"Distance to goal: {distance:.2f}m")
         
         if distance <= self.GOAL_TOLERANCE:
-            remaining_goals = len(self.planning_goals)
-            total_goals = len(self.received_goals)
             self.get_logger().info(
-                f'Reached goal! {remaining_goals}/{total_goals}'
+                f'Reached goal {self.goal_index + 1}/{len(self.planning_goals)}!'
                 f' Distance: {distance:.2f}m'
             )
             
-            # Clear current goal and pop from planning goals
+            # Increment goal index and clear current goal
+            self.goal_index += 1
             self.current_goal = None
-            if self.planning_goals:
-                self.planning_goals.pop()
             
             self.debug_log_state("Goal Reached")
     
@@ -228,37 +201,42 @@ class PathPlannerNode(Node):
         return path_msg
     
     def goal_callback(self, msg: PoseArray):
-        """Update received_goals deque with new goals"""
+        """Handle new goals from topic"""
         if not msg.poses:
             return
-        
-        # Add all goals if they're new
+            
+        # Add goal if it's new
         for pose in msg.poses:
             new_goal = (pose.position.x, pose.position.y)
             if new_goal not in self.received_goals:
                 self.received_goals.append(new_goal)
+                self.planning_goals.append(new_goal)
         
-        self.get_logger().info(f'Received {len(self.received_goals)} goals')
+        self.get_logger().info(f'Total goals: {len(self.planning_goals)}')
         self.debug_log_state("Goal Callback")
     
     def plan_to_next_goal(self):
-        """Plan path to the next goal in the planning stack"""
+        """Plan path to the current goal based on index"""
         self.get_logger().info("PLAN TO NEXT GOAL")
+        
+        if self.goal_index >= len(self.planning_goals):
+            self.get_logger().info("All goals completed")
+            return
         
         robot_pos = self.get_robot_position()
         if robot_pos is None:
             self.get_logger().warn("Cannot plan: No robot position")
             return
         
-        # Get next goal if we don't have one
-        if not self.current_goal and self.planning_goals:
-            self.current_goal = self.planning_goals[-1]
+        # Get goal at current index if we don't have one
+        if not self.current_goal:
+            self.current_goal = self.planning_goals[self.goal_index]
             self.get_logger().info(f"Setting new current goal: {self.current_goal}")
         
         # Always plan if we have a current goal
         if self.current_goal:
             self.get_logger().info(
-                f'Planning to goal {len(self.planning_goals)}/{len(self.received_goals)}: '
+                f'Planning to goal {self.goal_index + 1}/{len(self.planning_goals)}: '
                 f'{self.current_goal}'
             )
             
@@ -288,8 +266,8 @@ class PathPlannerNode(Node):
             f'resolution: {self.resolution}m'
         )
         
-        # Always try to plan if we have a current goal or available goals
-        if self.current_goal or self.planning_goals:
+        # Always try to plan if we have goals and haven't completed them all
+        if self.planning_goals and self.goal_index < len(self.planning_goals):
             self.plan_to_next_goal()
 
 def main(args=None):
