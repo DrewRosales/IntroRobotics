@@ -36,6 +36,7 @@ setup(
             'localization = robot_spawner_pkg.localization:main',
             'mapping = robot_spawner_pkg.mapping:main',
             'planner = robot_spawner_pkg.planner:main',
+            'diffdrive_pid = robot_spawner_pkg.diffdrive_pid:main',
         ],
     },
 )

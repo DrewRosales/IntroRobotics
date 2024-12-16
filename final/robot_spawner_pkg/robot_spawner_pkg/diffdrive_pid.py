@@ -33,7 +33,7 @@ class DiffDrivePid(Node):
         self.l = 0.15
         
         # Adjusted PID gains
-        self.kp = 0.8
+        self.kp = 0.6
         self.kd = 0.2
         self.ka = 0.6  # Angular gain for turn compensation
         
