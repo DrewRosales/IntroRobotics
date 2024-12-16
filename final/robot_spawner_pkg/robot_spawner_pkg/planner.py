@@ -205,7 +205,6 @@ class PathPlannerNode(Node):
         if not msg.poses:
             return
             
-        # Add goal if it's new
         for pose in msg.poses:
             new_goal = (pose.position.x, pose.position.y)
             if new_goal not in self.received_goals:
@@ -230,7 +229,7 @@ class PathPlannerNode(Node):
         
         # Get goal at current index if we don't have one
         if not self.current_goal:
-            self.current_goal = self.planning_goals[self.goal_index]
+            self.current_goal = self.planning_goals[len(self.planning_goals) - self.goal_index - 1]
             self.get_logger().info(f"Setting new current goal: {self.current_goal}")
         
         # Always plan if we have a current goal
